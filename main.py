@@ -1,3 +1,4 @@
+import asyncio
 import os
 import traceback
 import yaml
@@ -48,17 +49,16 @@ def send_message(message, message_type, target_id, auto_escape = False):
         params['user_id'] = target_id
     send_api_request(ws, 'send_msg', params)
 
-# 运行机器人
-def run_bot(ws):
-    receive_messages(ws)
-    while True:
+async def while_msg(ws):
+    try:
+        # 控制跳出
         try:
             # 接收返回的消息
             response = ws.recv()
         except Exception:
             print("[", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "] Connection is lost")
             time.sleep(60)
-            continue
+            raise StopIteration
         # 定义可能不存在的键，防止报错
         messages = json.loads(response)
         messages.setdefault('post_type', None)
@@ -67,7 +67,7 @@ def run_bot(ws):
         messages.setdefault('user_id', '0')
                 
         if messages['post_type'] != "message":
-            continue
+            raise StopIteration
         
         if config['debug']:            
             print(messages)
@@ -79,7 +79,7 @@ def run_bot(ws):
         # 查找词库获取回答
         text = chat_thesaurus(messages, config)
         if text == None:
-            continue
+            raise StopIteration
         
         if messages['message_type'] == 'private':
             # 处理私聊消息
@@ -89,6 +89,14 @@ def run_bot(ws):
             # 处理群聊消息
             # TODO: 根据收到的消息内容进行相应处理
             send_message(text, 'group', messages['group_id'])
+    except Exception:
+        pass
+
+# 运行机器人
+def run_bot(ws):
+    receive_messages(ws)
+    while True:
+        asyncio.run(while_msg(ws))
 
 if __name__ == '__main__':
     # 尝试建立websocket连接
