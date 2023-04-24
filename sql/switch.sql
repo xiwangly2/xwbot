@@ -15,17 +15,20 @@
 */
 
 SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
+SET
+FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
 -- Table structure for switch
 -- ----------------------------
 DROP TABLE IF EXISTS `switch`;
-CREATE TABLE `switch`  (
-  `group_id` int(11) NOT NULL,
-  `switch` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `time` datetime NOT NULL,
-  PRIMARY KEY (`group_id`) USING BTREE
+CREATE TABLE `switch`
+(
+    `group_id` int(11) NOT NULL,
+    `switch`   varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+    `time`     datetime                                                      NOT NULL,
+    PRIMARY KEY (`group_id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
-SET FOREIGN_KEY_CHECKS = 1;
+SET
+FOREIGN_KEY_CHECKS = 1;
