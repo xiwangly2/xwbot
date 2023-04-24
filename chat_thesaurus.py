@@ -28,6 +28,9 @@ def chat_thesaurus(messages, config):
             arg_all = re.match(arg[0] + ' (.*)', message).group(1)
         except NameError:
             pass
+    else:
+        arg_len = None
+
     is_admin = f_is_admin(messages['user_id'], config)
     try:
         # 查询开关
@@ -87,7 +90,7 @@ def chat_thesaurus(messages, config):
                 }
                 response = requests.post(url="https://api.xiwangly.top/math.php", data=data, headers=header).text
                 text = f"{response}"
-        elif re.match('_http(s)\:\/\/', message):
+        elif re.match('_http(s)://', message):
             text = "这是一个???"
         elif re.match('\d{1,3}', message):
             text = "选项"
