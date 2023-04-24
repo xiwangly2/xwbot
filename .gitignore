@@ -8,3 +8,5 @@ __pycache__
 # 备份文件
 *.bak
 *.backup
+#虚拟环境
+venv/*

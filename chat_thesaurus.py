@@ -80,7 +80,6 @@ def chat_thesaurus(messages, config):
         elif re.match('\d{1,3}', message):
             text = "选项"
         elif arg[0] == '/calc':
-            # 计算器pymysql.err.OperationalError: (1054, "Unknown column '589394954' in 'where clause'")
             try:
                 text = eval(arg_all, {"__builtins__":None},{"math": math})
             except Exception:
