@@ -95,6 +95,8 @@ async def while_msg(ws: object):
             # 处理群聊消息
             # 根据收到的消息内容进行相应处理
             send_message(text, 'group', messages['group_id'])
+        
+        text = None
     except Exception:
         pass
 
