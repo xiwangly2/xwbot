@@ -34,7 +34,8 @@ class Database(ConnectMysql):
 
             # 插入 SQL 记录
             date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            cursor.execute(f"INSERT INTO `logs` (`id`, `json`, `time`) VALUES (null, '{messages}', '{date}')")
+            cursor.execute(
+                f"INSERT INTO `logs` (`id`, `json`, `time`) VALUES (null, '{messages}', '{date}')")
 
             # 提交
             self.db.commit()
@@ -52,7 +53,8 @@ class Database(ConnectMysql):
                 cursor.execute(
                     f"REPLACE INTO `switch` (`group_id`, `switch`, `time`) VALUES ('{group_id}', '{switch}', '{date}')")
             else:
-                cursor.execute(f"select * from `switch` where `group_id` = '{group_id}'")
+                cursor.execute(
+                    f"select * from `switch` where `group_id` = '{group_id}'")
                 return cursor.fetchall()
             # 提交
             self.db.commit()

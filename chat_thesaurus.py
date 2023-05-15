@@ -35,8 +35,10 @@ def chat_thesaurus(messages, config):
     try:
         # 查询开关
         bot_switch = Database(config).bot_switch(messages['group_id'])
-        if bot_switch is None:
-            bot_switch = '0'
+        if bot_switch is None or len(bot_switch) == 0:
+            if arg[0] == '/on' and is_admin:
+                Database(config).bot_switch(messages['group_id'], 1)
+            text = "Bot started successfully"
         else:
             bot_switch = bot_switch[0][1]
     except NameError:
