@@ -38,7 +38,7 @@ def chat_thesaurus(messages, config):
         if bot_switch is None or len(bot_switch) == 0:
             if arg[0] == '/on' and is_admin:
                 Database(config).bot_switch(messages['group_id'], 1)
-            text = "Bot started successfully"
+            text = "Bot started successfully."
         else:
             bot_switch = bot_switch[0][1]
     except NameError:
@@ -48,16 +48,16 @@ def chat_thesaurus(messages, config):
     if bot_switch == '0':
         if arg[0] == '/on' and is_admin:
             Database(config).bot_switch(messages['group_id'], 1)
-            text = "Bot started successfully"
+            text = "Bot started successfully."
         else:
             text = None
         return text
     elif bot_switch == '1':
         if arg[0] == '/on' and is_admin:
-            text = "Bot is running"
+            text = "Bot is running."
         elif arg[0] == '/off' and is_admin:
             Database(config).bot_switch(messages['group_id'], 0)
-            text = "Bot is off"
+            text = "Bot is off."
         elif arg[0] == '/help':
             text = "这是一个帮助列表<Response [200]>"
         elif arg[0] == '/loli':
