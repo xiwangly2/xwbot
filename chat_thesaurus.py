@@ -1,4 +1,3 @@
-import math
 import re
 import traceback
 
@@ -29,7 +28,7 @@ def chat_thesaurus(messages, config):
         except NameError:
             pass
     else:
-        arg_len = None
+        arg_len = 1
 
     is_admin = f_is_admin(messages['user_id'], config)
     try:
@@ -97,10 +96,17 @@ def chat_thesaurus(messages, config):
         elif re.match('\d{1,3}', message):
             text = "选项"
         elif arg[0] == '/calc':
+            import math
             try:
                 text = eval(arg_all, {"__builtins__": None}, {"math": math})
             except ArithmeticError:
                 text = "计算错误，表达式不合法"
+        elif arg[0] == '/uuid':
+            import uuid
+            if arg_len == 1:
+                text = str(uuid.uuid4())
+            elif arg_len == 3:
+                text = str(uuid.uuid5(arg[1], arg[2]))
         else:
             text = None
         return text
