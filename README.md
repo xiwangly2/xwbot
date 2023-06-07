@@ -17,4 +17,4 @@ Python依赖别忘了安装，cd到目录，然后`pip install -r requirements.t
 
 docker build -t xiwanglyxwbot .
 
-docker run -d --name xwbot --net=host xiwangly/xwbot
+docker run -itd --name xwbot --net=host xiwangly/xwbot
