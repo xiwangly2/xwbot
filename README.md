@@ -12,3 +12,9 @@ Python依赖别忘了安装，cd到目录，然后`pip install -r requirements.t
 别忘了导入数据库完成初始化
 
 自动化的部署脚本在写了……
+
+## 使用Docker
+
+docker build -t xiwanglyxwbot .
+
+docker run -d --name xwbot --net=host xiwangly/xwbot
