@@ -89,7 +89,8 @@ def chat_thesaurus(messages, config):
                 header = {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
                 }
-                response = requests.post(url="https://api.xiwangly.top/math.php", data=data, headers=header).text
+                response = requests.post(
+                    url="https://api.xiwangly.top/math.php", data=data, headers=header).text
                 text = f"{response}"
         elif re.match('_http(s)://', message):
             text = "这是一个???"
@@ -107,6 +108,26 @@ def chat_thesaurus(messages, config):
                 text = str(uuid.uuid4())
             elif arg_len == 3:
                 text = str(uuid.uuid5(arg[1], arg[2]))
+        elif arg[0] == '/菜单':
+            text = '********************\n\
+/菜单 或 /help -帮助\n\
+[1]/ping ip\n\
+/复读 [format] msg(admin)\n\
+/start - 开始\n\
+[2]/来份萝莉 或 /loli - 发送随机二次元图片\n\
+[3]/uuid - 生成UUID\n\
+/dwz url - 生成短网址\n\
+/m msg - 智能聊天（实验）\n\
+/yiyan - 随机一言\n\
+/info - 信息\n\
+/dic question answer - 增加dic(admin)\n\
+/math [x] [y] [z] method - 数学计算\n\
+/xuid id - 查询xbox xuid\n\
+/fileupload url [name] - 文件上传(admin)\n\
+/签到 或 /check_in - 每日签到\n\
+/gold user(object) number - 增加金币(admin)\n\
+注：[]表示参数可选，部分命令可通过[]的数字简化选择\n\
+********************'
         else:
             text = None
         return text
