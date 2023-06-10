@@ -1,7 +1,7 @@
 import re
 import traceback
-
-import requests
+import asyncio
+import aiohttp
 
 from mysql import Database
 
@@ -14,7 +14,12 @@ def f_is_admin(target_id, config):
         return False
 
 
-def chat_thesaurus(messages, config):
+async def fetch(session, url):
+    async with session.get(url) as response:
+        return await response.text()
+
+
+async def chat_thesaurus(messages, config):
     # 消息文本内容
     message = messages['message']
     # 按空格分隔参数
@@ -86,12 +91,12 @@ def chat_thesaurus(messages, config):
                         data['m'] = arg[1]
                     except NameError:
                         pass
-                header = {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
-                }
-                response = requests.post(
-                    url="https://api.xiwangly.top/math.php", data=data, headers=header).text
-                text = f"{response}"
+                async with aiohttp.ClientSession() as session:
+                    header = {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
+                    }
+                    response = await fetch(session, url="https://api.xiwangly.top/math.php", data=data, headers=header)
+                    text = f"{response}"
         elif re.match('_http(s)://', message):
             text = "这是一个???"
         elif re.match('\d{1,3}', message):
@@ -131,3 +136,15 @@ def chat_thesaurus(messages, config):
         else:
             text = None
         return text
+
+
+async def main():
+    config = {...}  # 配置信息
+    messages = {...}  # 消息内容
+
+    text = await chat_thesaurus(messages, config)
+    print(text)
+
+
+if __name__ == '__main__':
+    asyncio.run(main())

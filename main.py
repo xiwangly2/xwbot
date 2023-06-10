@@ -83,7 +83,7 @@ async def while_msg(session, ws):
             Database(config).chat_logs(messages)
 
         # 查找词库获取回答
-        text = chat_thesaurus(messages, config)
+        text = await chat_thesaurus(messages, config)
         if text is None:
             raise StopIteration
 
