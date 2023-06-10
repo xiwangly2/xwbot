@@ -3,5 +3,3 @@ DBUtils==3.0.3
 pymongo==4.3.3
 PyMySQL==1.0.2
 PyYAML==6.0
-PyYAML==6.0
-Requests==2.30.0
