@@ -2,6 +2,8 @@
 
 手捏项目中……
 
+~~早知道就用Nonebot了，何必自己造轮子~~
+
 首次使用请将`config/config_example.yml`复制到`config/config.yml`
 并编辑其中的设置，并且正确的配置[Go-cqhttp](https://github.com/Mrs4s/go-cqhttp)的正向websocket通信
 
