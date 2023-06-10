@@ -15,6 +15,6 @@ Python依赖别忘了安装，cd到目录，然后`pip install -r requirements.t
 
 ## 使用Docker
 
-docker build -t xiwanglyxwbot .
+docker build -t xiwangly/xwbot .
 
 docker run -itd -v /www/wwwroot/xwbot/config/config.yml:/app/config/config.yml --name xwbot --net=host xiwangly/xwbot
