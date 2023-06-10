@@ -3,7 +3,7 @@ import json
 import os
 import time
 
-import websocket
+import aiohttp
 import yaml
 
 # 导入自己写的模块
@@ -29,21 +29,21 @@ def build_api_data(action, params):
 
 
 # 发送 API 请求
-def send_api_request(ws, action, params):
+async def send_api_request(session, ws, action, params):
     data = build_api_data(action, params)
-    ws.send(data)
-    response = ws.recv()
-    return json.loads(response)
+    await ws.send_str(data)
+    response = await ws.receive()
+    return json.loads(response.data)
 
 
 # 接收消息
-def receive_messages(ws: object):
+async def receive_messages(ws):
     event = {"action": "get_login_info", "params": {"access_token": config['access_token']}}
-    ws.send(json.dumps(event))
+    await ws.send_str(json.dumps(event))
 
 
 # 发送消息
-def send_message(message, message_type, target_id, auto_escape=False):
+async def send_message(session, ws, message, message_type, target_id, auto_escape=False):
     params = {
         'message': message,
         'auto_escape': auto_escape
@@ -52,21 +52,21 @@ def send_message(message, message_type, target_id, auto_escape=False):
         params['group_id'] = target_id
     elif message_type == 'private':
         params['user_id'] = target_id
-    send_api_request(ws, 'send_msg', params)
+    await send_api_request(session, ws, 'send_msg', params)
 
 
-async def while_msg(ws: object):
+async def while_msg(session, ws):
     try:
         # 控制跳出
         try:
             # 接收返回的消息
-            response = ws.recv()
+            response = await ws.receive()
         except Exception:
             print("[", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "] Connection is lost")
-            time.sleep(60)
+            await asyncio.sleep(60)
             raise StopIteration
         # 定义可能不存在的键，防止报错
-        messages = json.loads(response)
+        messages = json.loads(response.data)
         messages.setdefault('post_type', None)
         messages.setdefault('message_type', None)
         messages.setdefault('group_id', '0')
@@ -90,11 +90,11 @@ async def while_msg(ws: object):
         if messages['message_type'] == 'private':
             # 处理私聊消息
             # 根据收到的消息内容进行相应处理
-            send_message(text, 'private', messages['user_id'])
+            await send_message(session, ws, text, 'private', messages['user_id'])
         elif messages['message_type'] == 'group':
             # 处理群聊消息
             # 根据收到的消息内容进行相应处理
-            send_message(text, 'group', messages['group_id'])
+            await send_message(session, ws, text, 'group', messages['group_id'])
         
         text = None
     except Exception:
@@ -102,19 +102,19 @@ async def while_msg(ws: object):
 
 
 # 运行机器人
-def run_bot(ws: object):
-    receive_messages(ws)
-    while True:
-        asyncio.run(while_msg(ws))
+async def run_bot():
+    async with aiohttp.ClientSession() as session:
+        try:
+            ws = await session.ws_connect(f"ws://{config['host']}:{config['port']}/",
+                                          headers={"Authorization": f"Bearer {config['access_token']}"})
+        except:
+            print("Error creating websocket connection")
+            return
+        
+        await receive_messages(ws)
+        while True:
+            await while_msg(session, ws)
 
 
 if __name__ == '__main__':
-    # 尝试建立websocket连接
-    try:
-        ws = websocket.create_connection(f"ws://{config['host']}:{config['port']}/",
-                                         header=[f"Authorization: Bearer {config['access_token']}"])
-    except:
-        print("Error creating websocket connection")
-        traceback.print_exc()
-        exit()
-    run_bot(ws)
+    asyncio.run(run_bot())
