@@ -1,4 +1,4 @@
-FROM python:3.11.3-slim-bullseye AS builder
+FROM python:3.11.4-bullseye AS builder
 
 ENV TZ Asia/Shanghai
 
