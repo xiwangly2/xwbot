@@ -133,18 +133,20 @@ async def chat_thesaurus(messages, config):
 /gold user(object) number - 增加金币(admin)\n\
 注：[]表示参数可选，部分命令可通过[]的数字简化选择\n\
 ********************'
+        elif re.match('\[CQ\:xml,data\=', message):
+            text = message
         else:
             text = None
         return text
 
 
-async def main():
-    config = {...}  # 配置信息
-    messages = {...}  # 消息内容
+# async def main():
+#     config = {...}  # 配置信息
+#     messages = {...}  # 消息内容
 
-    text = await chat_thesaurus(messages, config)
-    print(text)
+#     text = await chat_thesaurus(messages, config)
+#     print(text)
 
 
-if __name__ == '__main__':
-    asyncio.run(main())
+# if __name__ == '__main__':
+#     asyncio.run(main())

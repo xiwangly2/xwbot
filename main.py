@@ -43,15 +43,17 @@ async def receive_messages(ws):
 
 
 # 发送消息
-async def send_message(session, ws, message, message_type, target_id, auto_escape=False):
+async def send_message(session, ws, messages, text, auto_escape=False):
     params = {
-        'message': message,
+        'message': text,
         'auto_escape': auto_escape
     }
-    if message_type == 'group':
-        params['group_id'] = target_id
-    elif message_type == 'private':
-        params['user_id'] = target_id
+    if messages['message_type'] == 'private':
+        # 处理私聊消息
+        params['user_id'] = messages['user_id']
+    elif messages['message_type'] == 'group':
+        # 处理群聊消息
+        params['group_id'] = messages['group_id']
     await send_api_request(session, ws, 'send_msg', params)
 
 
@@ -85,17 +87,8 @@ async def while_msg(session, ws):
         # 查找词库获取回答
         text = await chat_thesaurus(messages, config)
         if text is None:
-            raise StopIteration
-
-        if messages['message_type'] == 'private':
-            # 处理私聊消息
-            # 根据收到的消息内容进行相应处理
-            await send_message(session, ws, text, 'private', messages['user_id'])
-        elif messages['message_type'] == 'group':
-            # 处理群聊消息
-            # 根据收到的消息内容进行相应处理
-            await send_message(session, ws, text, 'group', messages['group_id'])
-        
+            raise StopIteration    
+        await send_message(session, ws, messages, text, False)
         text = None
     except Exception:
         pass
