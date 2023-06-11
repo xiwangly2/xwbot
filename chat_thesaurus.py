@@ -70,7 +70,7 @@ async def chat_thesaurus(messages):
             response = requests.get(api_url)
             img_url = response.json()['imgurl']
             text = {
-                'auto_escape': True,
+                'auto_escape': False,
                 'text_list': ['您要的loli:', f"[CQ:image,file={img_url}]"]
             }
         elif arg[0] == '/math':
