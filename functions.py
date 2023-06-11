@@ -80,8 +80,13 @@ async def while_msg(ws):
         if isinstance(text, str):
             await send_message(ws, messages, text, False)
         else:
-            for message in text:
-                await send_message(ws, messages, message, True)
+            if 'text_list' in text:
+                text.setdefault('auto_escape', False)
+                for message in text['text_list']:
+                    await send_message(ws, messages, message, text['auto_escape'])
+            else:
+                for message in text:
+                    await send_message(ws, messages, message, False)
         text = None
     except Exception:
         pass

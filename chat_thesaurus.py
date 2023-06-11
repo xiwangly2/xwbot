@@ -144,7 +144,10 @@ async def chat_thesaurus(messages):
         elif re.search(r'^\[CQ:at,qq=', message) or re.search(r'^\[CQ:reply,id=', message) or re.search(r'^\[CQ:face,id=', message):
             text = None
         elif re.search(r'\[CQ:', message):
-            text = ['解析CQ码:', message]
+            text = {
+                'auto_escape': True,
+                'text_list': ['解析CQ码:', message]
+            }
         elif re.search(r'^<\?xml', message):
             text = message
             json = {}
@@ -157,6 +160,12 @@ async def chat_thesaurus(messages):
             json['type'] = 'json'
             json['data'] = {'data': text}
             text = ['发送JSON:', json]
+        elif arg[0] == '/test':
+            # text = ['第一条消息', '第二条消息']
+            text = {
+                'auto_escape': True,
+                'text_list': ['第一条消息', '第二条消息', messages]
+            }
         else:
             text = None
         return text
