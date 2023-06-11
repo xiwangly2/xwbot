@@ -80,11 +80,8 @@ async def while_msg(ws):
         if isinstance(text, str):
             await send_message(ws, messages, text, False)
         else:
-            if 'type' in text and 'data' in text:
-                await send_message(ws, messages, text['data'], False)
-            elif 'type' in text and 'data_list' in text:
-                for message in text['data_list']:
-                    await send_message(ws, messages, message, False)
+            for message in text:
+                await send_message(ws, messages, message, True)
         text = None
     except Exception:
         pass
