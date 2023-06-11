@@ -21,7 +21,7 @@ def f_is_admin(target_id):
 
 async def chat_thesaurus(messages):
     # 消息文本内容
-    message = messages['message']
+    message = html.unescape(messages['message'])
     # 按空格分隔参数
     arg = re.split('\s', message)
     # 计算参数数量
@@ -64,8 +64,15 @@ async def chat_thesaurus(messages):
             text = "Bot is off."
         elif arg[0] == '/help':
             text = "这是一个帮助列表<Response [200]>"
-        elif arg[0] == '/loli':
-            text = "[CQ:image,file={$api_json['imgurl']}]"
+        elif arg[0] == '/来份萝莉' or arg[0] == '/loli':
+            # 发送随机二次元图片
+            api_url = 'https://api.xiwangly.top/random.php?return=json'
+            response = requests.get(api_url)
+            img_url = response.json()['imgurl']
+            text = {
+                'auto_escape': True,
+                'text_list': ['您要的loli:', f"[CQ:image,file={img_url}]"]
+            }
         elif arg[0] == '/math':
             if arg_len == 1:
                 text = "/math method x y z"
@@ -141,26 +148,32 @@ async def chat_thesaurus(messages):
             text = html.unescape(message)
             text = re.sub(r'\[CQ:json,data=(.+)\]', r'\1', text)
             text = ['解析JSON:', text]
-        elif re.search(r'^\[CQ:at,qq=', message) or re.search(r'^\[CQ:reply,id=', message) or re.search(r'^\[CQ:face,id=', message):
+        elif re.match('^\[CQ\:at,qq=', message) or re.match('^\[CQ\:reply,id=', message) or re.match('^\[CQ\:face,id=', message):
             text = None
-        elif re.search(r'\[CQ:', message):
+        elif re.match('\[CQ\:.+\]', message):
             text = {
                 'auto_escape': True,
                 'text_list': ['解析CQ码:', message]
             }
-        elif re.search(r'^<\?xml', message):
+        elif arg[0] == '/send' and is_admin:
+            text = {
+                'auto_escape': False,
+                'text_list': ['已发送:', arg[1]]
+            }
+        elif re.match('^\<\?xml', message, re.DOTALL) and is_admin:
             text = message
             json = {}
             json['type'] = 'xml'
             json['data'] = {'data': text}
             text = ['发送XML:', json]
-        elif re.search(r'^{', message):
+        elif re.match('^\{', message, re.DOTALL) and is_admin:
             text = message
             json = {}
             json['type'] = 'json'
             json['data'] = {'data': text}
             text = ['发送JSON:', json]
         elif arg[0] == '/test':
+            # 测试
             # text = ['第一条消息', '第二条消息']
             text = {
                 'auto_escape': True,
@@ -172,6 +185,7 @@ async def chat_thesaurus(messages):
 
 
 async def main():
+    # 测试
     messages = {...}  # 消息内容
 
     text = await chat_thesaurus(messages)
