@@ -1,4 +1,3 @@
-import asyncio
 import json
 import time
 
@@ -74,7 +73,7 @@ async def while_msg(ws):
 
             if config['write_log']:
                 # 日志写入数据库
-                Database(config).chat_logs(messages)
+                Database().chat_logs(messages)
 
             # 查找词库获取回答
             text = await chat_thesaurus(messages)

@@ -4,10 +4,11 @@ import traceback
 from dbutils.pooled_db import PooledDB
 import pymysql
 from pymysql.converters import escape_string
+# 导入自己写的模块
+from config import config
 
 class Database:
-    def __init__(self, config):
-        self.config = config
+    def __init__(self):
         # 创建数据库连接池
         try:
             self.pool = PooledDB(
@@ -18,7 +19,8 @@ class Database:
             )
         except Exception:
             print("Could not create database connection pool")
-            traceback.print_exc()
+            if config['debug']:
+                traceback.print_exc()
 
     def chat_logs(self, messages=None):
         try:
@@ -37,7 +39,8 @@ class Database:
             cursor.close()
             conn.close()  # 将连接放回连接池
         except Exception:
-            traceback.print_exc()
+            if config['debug']:
+                traceback.print_exc()
 
     def bot_switch(self, group_id='0', switch=None):
         try:
@@ -58,4 +61,5 @@ class Database:
             cursor.close()
             conn.close()  # 将连接放回连接池
         except Exception:
-            traceback.print_exc()
+            if config['debug']:
+                traceback.print_exc()
