@@ -29,7 +29,7 @@ def build_api_data(action, params):
 
 
 # 发送 API 请求
-async def send_api_request(session, ws, action, params):
+async def send_api_request(ws, action, params):
     data = build_api_data(action, params)
     await ws.send_str(data)
     response = await ws.receive()
@@ -43,7 +43,7 @@ async def receive_messages(ws):
 
 
 # 发送消息
-async def send_message(session, ws, messages, text, auto_escape=False):
+async def send_message(ws, messages, text, auto_escape=False):
     params = {
         'message': text,
         'auto_escape': auto_escape
@@ -54,10 +54,10 @@ async def send_message(session, ws, messages, text, auto_escape=False):
     elif messages['message_type'] == 'group':
         # 处理群聊消息
         params['group_id'] = messages['group_id']
-    await send_api_request(session, ws, 'send_msg', params)
+    await send_api_request(ws, 'send_msg', params)
 
 
-async def while_msg(session, ws):
+async def while_msg(ws):
     try:
         # 控制跳出
         try:
@@ -88,7 +88,7 @@ async def while_msg(session, ws):
         text = await chat_thesaurus(messages, config)
         if text is None:
             raise StopIteration    
-        await send_message(session, ws, messages, text, False)
+        await send_message(ws, messages, text, False)
         text = None
     except Exception:
         pass
@@ -106,7 +106,7 @@ async def run_bot():
         
         await receive_messages(ws)
         while True:
-            await while_msg(session, ws)
+            await while_msg(ws)
 
 
 if __name__ == '__main__':
