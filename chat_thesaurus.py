@@ -1,21 +1,25 @@
+import html
 import re
 import traceback
 import asyncio
 import aiohttp
 import requests
 
+# 导入自己写的模块
+from config import config
+from functions import *
 from mysql import Database
 
 
 # 判断QQ号是否在管理员列表里
-def f_is_admin(target_id, config):
+def f_is_admin(target_id):
     if f"{target_id}" in config['admin']:
         return True
     else:
         return False
 
 
-async def chat_thesaurus(messages, config):
+async def chat_thesaurus(messages):
     # 消息文本内容
     message = messages['message']
     # 按空格分隔参数
@@ -31,7 +35,7 @@ async def chat_thesaurus(messages, config):
     else:
         arg_len = 1
 
-    is_admin = f_is_admin(messages['user_id'], config)
+    is_admin = f_is_admin(messages['user_id'])
     try:
         # 查询开关
         bot_switch = Database(config).bot_switch(messages['group_id'])
@@ -130,17 +134,18 @@ async def chat_thesaurus(messages, config):
 注：[]表示参数可选，部分命令可通过[]的数字简化选择\n\
 ********************'
         elif re.match('\[CQ\:xml,data\=', message):
-            text = message
+            send_message()
+            text = html.unescape(message)
+            text = re.sub(r'\[CQ:xml,data=(.+)\]', r'\1', text)
         else:
             text = None
         return text
 
 
 async def main():
-    config = {...}  # 配置信息
     messages = {...}  # 消息内容
 
-    text = await chat_thesaurus(messages, config)
+    text = await chat_thesaurus(messages)
     print(text)
 
 

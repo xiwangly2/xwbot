@@ -1,5 +1,11 @@
 import re
 
+# 导入自己写的模块
+from config import config
+
+messages = None
+message = None
+
 def parse_dic_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         text = file.read()
@@ -31,7 +37,7 @@ dic_qa = parse_dic_file(dic_file)
 variables = {
     'QQ': str(messages['user_id']),
     '群号': str(messages['group_id']),
-    '主人': administrator_id,
+    '主人': str(messages['administrator_id']),
     '管理员': '',
     'GroupName': '',
     'Robot': str(messages['self_id']),
