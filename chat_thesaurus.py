@@ -110,7 +110,7 @@ async def chat_thesaurus(messages):
         elif arg[0] == '/uuid':
             import uuid
             if arg_len == 1:
-                text = str(uuid.uuid4())
+                text = [str(uuid.uuid4()), "11111"]
             elif arg_len == 3:
                 text = str(uuid.uuid5(arg[1], arg[2]))
         elif arg[0] == '/菜单':
@@ -134,9 +134,25 @@ async def chat_thesaurus(messages):
 注：[]表示参数可选，部分命令可通过[]的数字简化选择\n\
 ********************'
         elif re.match('\[CQ\:xml,data\=', message):
-            send_message()
             text = html.unescape(message)
             text = re.sub(r'\[CQ:xml,data=(.+)\]', r'\1', text)
+        elif re.match('\[CQ\:json,data\=', message):
+            text = html.unescape(message)
+            text = re.sub(r'\[CQ:json,data=(.+)\]', r'\1', text)
+        elif re.search(r'^\[CQ:at,qq=', message) or re.search(r'^\[CQ:reply,id=', message) or re.search(r'^\[CQ:face,id=', message):
+            text = None
+        elif re.search(r'\[CQ:', message):
+            text = message
+        elif re.search(r'^<\?xml', message):
+            text = message
+            json = {}
+            json['type'] = 'xml'
+            json['data'] = {'data': text}
+        elif re.search(r'^{', message):
+            text = message
+            json = {}
+            json['type'] = 'json'
+            json['data'] = {'data': text}
         else:
             text = None
         return text

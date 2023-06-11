@@ -77,7 +77,14 @@ async def while_msg(ws):
         text = await chat_thesaurus(messages)
         if text is None:
             raise StopIteration    
-        await send_message(ws, messages, text, False)
+        if isinstance(text, str):
+            await send_message(ws, messages, text, False)
+        else:
+            if 'type' in text and 'data' in text:
+                await send_message(ws, messages, text['data'], False)
+            elif 'type' in text and 'data_list' in text:
+                for message in text['data_list']:
+                    await send_message(ws, messages, message, False)
         text = None
     except Exception:
         pass
