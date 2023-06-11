@@ -47,46 +47,49 @@ async def send_message(ws, messages, text, auto_escape=False):
 
 
 async def while_msg(ws):
-    try:
-        # 控制跳出
+    while True:
         try:
-            # 接收返回的消息
-            response = await ws.receive()
-        except Exception:
-            print("[", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "] Connection is lost")
-            await asyncio.sleep(60)
-            raise StopIteration
-        # 定义可能不存在的键，防止报错
-        messages = json.loads(response.data)
-        messages.setdefault('post_type', None)
-        messages.setdefault('message_type', None)
-        messages.setdefault('group_id', '0')
-        messages.setdefault('user_id', '0')
+            # 控制跳出
+            try:
+                # 接收返回的消息
+                response = await ws.receive()
+                if ws.closed:
+                    raise StopAsyncIteration
+            except Exception:
+                print("[", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "] Connection is lost")
+                await ws.close()
+                break
+            # 定义可能不存在的键，防止报错
+            messages = json.loads(response.data)
+            messages.setdefault('post_type', None)
+            messages.setdefault('message_type', None)
+            messages.setdefault('group_id', '0')
+            messages.setdefault('user_id', '0')
 
-        if messages['post_type'] != "message":
-            raise StopIteration
+            if messages['post_type'] != "message":
+                raise StopIteration
 
-        if config['debug']:
-            print(messages)
+            if config['debug']:
+                print(messages)
 
-        if config['write_log']:
-            # 日志写入数据库
-            Database(config).chat_logs(messages)
+            if config['write_log']:
+                # 日志写入数据库
+                Database(config).chat_logs(messages)
 
-        # 查找词库获取回答
-        text = await chat_thesaurus(messages)
-        if text is None:
-            raise StopIteration    
-        if isinstance(text, str):
-            await send_message(ws, messages, text, False)
-        else:
-            if 'text_list' in text:
-                text.setdefault('auto_escape', False)
-                for message in text['text_list']:
-                    await send_message(ws, messages, message, text['auto_escape'])
+            # 查找词库获取回答
+            text = await chat_thesaurus(messages)
+            if text is None:
+                raise StopIteration    
+            if isinstance(text, str):
+                await send_message(ws, messages, text, False)
             else:
-                for message in text:
-                    await send_message(ws, messages, message, False)
-        text = None
-    except Exception:
-        pass
+                if 'text_list' in text:
+                    text.setdefault('auto_escape', False)
+                    for message in text['text_list']:
+                        await send_message(ws, messages, message, text['auto_escape'])
+                else:
+                    for message in text:
+                        await send_message(ws, messages, message, False)
+            text = None
+        except Exception:
+            pass
