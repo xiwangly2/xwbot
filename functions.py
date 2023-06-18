@@ -1,11 +1,19 @@
 import json
-import time
+from colorama import Fore, Style
 
 # 导入自己写的模块
 from config import config
 from chat_thesaurus import chat_thesaurus
 from mysql import Database
 
+# 输出红色错误消息的函数
+def print_error(message):
+    print(Fore.RED + message + Style.RESET_ALL)
+
+
+# 输出黄色警告消息的函数
+def print_warning(message):
+    print(Fore.YELLOW + message + Style.RESET_ALL)
 
 # 构造 API 请求数据
 def build_api_data(action, params):
@@ -55,7 +63,10 @@ async def while_msg(ws):
                 if ws.closed:
                     raise StopAsyncIteration
             except Exception:
-                print("[", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "] Connection is lost")
+                import time
+                # 清空终端窗口输出
+                clear_terminal()
+                print_error("Error: [", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "] Connection is lost")
                 await ws.close()
                 break
             # 定义可能不存在的键，防止报错
@@ -92,3 +103,27 @@ async def while_msg(ws):
             text = None
         except Exception:
             pass
+
+# 清空终端窗口输出的函数
+def clear_terminal():
+    import os
+    # 尝试使用 os.system('cls') 清空终端窗口输出（Windows）
+    try:
+        os.system('cls')
+        return
+    except:
+        pass
+
+    # 尝试使用 os.system('clear') 清空终端窗口输出（类Unix）
+    try:
+        os.system('clear')
+        return
+    except:
+        pass
+
+    # 尝试使用 ANSI 转义序列清空终端窗口输出
+    try:
+        print("\033c", end='')
+        return
+    except:
+        pass

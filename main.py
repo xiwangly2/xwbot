@@ -14,7 +14,12 @@ async def run_bot():
             ws = await session.ws_connect(f"ws://{config['host']}:{config['port']}/",
                                         headers={"Authorization": f"Bearer {config['access_token']}"})
         except:
-            print("Error creating websocket connection")
+            # 清空终端窗口输出
+            clear_terminal()
+            if config['debug']:
+                import traceback
+                traceback.print_exc()
+            print_error("Error: Creating websocket connection")
             return
         await receive_messages(ws)
         await while_msg(ws)

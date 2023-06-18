@@ -1,6 +1,5 @@
 import html
 import re
-import traceback
 import asyncio
 import aiohttp
 import requests
@@ -47,7 +46,9 @@ async def chat_thesaurus(messages):
             bot_switch = bot_switch[0][1]
     except NameError:
         bot_switch = '0'
-        traceback.print_exc()
+        if config['debug']:
+            import traceback
+            traceback.print_exc()
         pass
     if bot_switch == '0':
         if arg[0] == '/on' and is_admin:
