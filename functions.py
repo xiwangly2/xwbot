@@ -68,7 +68,7 @@ async def while_msg(ws):
                 import time
                 # 清空终端窗口输出
                 clear_terminal()
-                print_error("Error: [", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "] Connection is lost")
+                print_error("Error: [", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "] Connection is lost.")
                 await ws.close()
                 break
             # 定义可能不存在的键，防止报错
@@ -109,23 +109,7 @@ async def while_msg(ws):
 # 清空终端窗口输出的函数
 def clear_terminal():
     import os
-    # 尝试使用 os.system('cls') 清空终端窗口输出（Windows）
     try:
-        os.system('cls')
-        return
-    except:
-        pass
-
-    # 尝试使用 os.system('clear') 清空终端窗口输出（类Unix）
-    try:
-        os.system('clear')
-        return
-    except:
-        pass
-
-    # 尝试使用 ANSI 转义序列清空终端窗口输出
-    try:
-        print("\033c", end='')
-        return
+        os.system('cls' if os.name == 'nt' else 'clear')
     except:
         pass
