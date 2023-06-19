@@ -21,13 +21,13 @@ Python 依赖别忘了安装， cd 到目录，然后`pip install -r requirement
 
 ### 从 ghcr 拉取镜像
 ```sh
-docker run -itd -v /www/wwwroot/go-cqhttp:/data --name=xwbot --net=host --restart=always ghcr.io/xiwangly2/xwbot:main
+docker run -itd -v $PWD/xwbot/config:/app/config --name=xwbot --net=host --restart=always ghcr.io/xiwangly2/xwbot:main
 ```
 
 ### 从 DockerHub 拉取镜像
 
 ```sh
-docker run -itd -v /www/wwwroot/go-cqhttp:/data --name=xwbot --net=host --restart=always xiwangly/xwbot
+docker run -itd -v $PWD/xwbot/config:/app/config --name=xwbot --net=host --restart=always xiwangly/xwbot
 ```
 
 ## 更新/卸载

@@ -10,10 +10,12 @@ from mysql import Database
 def print_error(message):
     print(Fore.RED + message + Style.RESET_ALL)
 
-
 # 输出黄色警告消息的函数
 def print_warning(message):
     print(Fore.YELLOW + message + Style.RESET_ALL)
+
+def print_green(message):
+    print(Fore.GREEN + message + Style.RESET_ALL)
 
 # 构造 API 请求数据
 def build_api_data(action, params):
