@@ -52,7 +52,14 @@ async def send_message(ws, messages, text, auto_escape=False):
     elif messages['message_type'] == 'group':
         # 处理群聊消息
         params['group_id'] = messages['group_id']
-    await send_api_request(ws, 'send_msg', params)
+    return await send_api_request(ws, 'send_msg', params)
+
+# 解析合并转发
+async def get_forward_msg(ws, message_id):
+    params = {
+        'message_id': message_id
+    }
+    return await send_api_request(ws, 'get_forward_msg', params)
 
 
 async def while_msg(ws):
@@ -89,7 +96,7 @@ async def while_msg(ws):
                 Database().chat_logs(messages)
 
             # 查找词库获取回答
-            text = await chat_thesaurus(messages)
+            text = await chat_thesaurus(messages, ws)
             if text is None:
                 raise StopIteration    
             if isinstance(text, str):

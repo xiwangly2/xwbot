@@ -18,7 +18,7 @@ def f_is_admin(target_id):
         return False
 
 
-async def chat_thesaurus(messages):
+async def chat_thesaurus(messages, ws = None):
     # 消息文本内容
     message = html.unescape(messages['message'])
     # 按空格分隔参数
@@ -149,6 +149,10 @@ async def chat_thesaurus(messages):
             text = html.unescape(message)
             text = re.sub(r'\[CQ:json,data=(.+)\]', r'\1', text)
             text = ['解析JSON:', text]
+        elif re.match('\[CQ\:forward,id\=', message):
+            message_id = re.sub(r'\[CQ:forward,id=(.+)\]', r'\1', message)
+            text = await get_forward_msg(ws, message_id)
+            text = ['解析合并转发:', text]
         elif re.match('^\[CQ\:at,qq=', message) or re.match('^\[CQ\:reply,id=', message) or re.match('^\[CQ\:face,id=', message):
             text = None
         elif re.match('\[CQ\:.+\]', message):
