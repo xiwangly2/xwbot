@@ -75,7 +75,7 @@ async def while_msg(ws):
                 import time
                 # 清空终端窗口输出
                 clear_terminal()
-                print_error("Error: [", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "] Connection is lost.")
+                print_error("Error: [" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) +  "] Connection is lost.")
                 await ws.close()
                 break
             # 定义可能不存在的键，防止报错

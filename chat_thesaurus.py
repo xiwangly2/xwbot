@@ -177,13 +177,14 @@ async def chat_thesaurus(messages, ws = None):
             json['type'] = 'json'
             json['data'] = {'data': text}
             text = ['发送JSON:', json]
-        elif arg[0] == '/test':
-            # 测试
-            # text = ['第一条消息', '第二条消息']
-            text = {
-                'auto_escape': True,
-                'text_list': ['第一条消息', '第二条消息', messages]
-            }
+        elif config['debug']:
+            if arg[0] == '/test':
+                # 测试
+                # text = ['第一条消息', '第二条消息']
+                text = {
+                    'auto_escape': True,
+                    'text_list': ['第一条消息', '第二条消息', messages]
+                }
         else:
             text = None
         return text
