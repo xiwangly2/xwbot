@@ -2,9 +2,9 @@ import json
 from colorama import Fore, Style
 
 # 导入自己写的模块
-from config import config
-from chat_thesaurus import chat_thesaurus
-from mysql import Database
+from internal.config import config
+from internal.chat_thesaurus import chat_thesaurus
+from internal.database.mysql_handler import Database
 
 # 输出红色错误消息的函数
 def print_error(message):

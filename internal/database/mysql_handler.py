@@ -5,7 +5,7 @@ from dbutils.pooled_db import PooledDB
 import pymysql
 from pymysql.converters import escape_string
 # 导入自己写的模块
-from config import config
+from internal.config import config
 
 class Database:
     def __init__(self):

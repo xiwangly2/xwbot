@@ -3,8 +3,8 @@ import aiohttp
 
 
 # 导入自己写的模块
-from config import config
-from functions import *
+from internal.config import config
+from internal.functions import *
 
 
 # 运行机器人

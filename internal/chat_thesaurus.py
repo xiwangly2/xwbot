@@ -5,9 +5,9 @@ import aiohttp
 import requests
 
 # 导入自己写的模块
-from config import config
-from functions import *
-from mysql import Database
+from internal.config import config
+from internal.functions import *
+from internal.database.mysql_handler import Database
 
 
 # 判断QQ号是否在管理员列表里
