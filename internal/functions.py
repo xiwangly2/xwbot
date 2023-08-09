@@ -103,6 +103,7 @@ async def while_msg(ws):
                 await send_message(ws, messages, text, False)
             else:
                 if 'text_list' in text:
+                    # auto_escape 控制自动格式化消息，这里默认否，即消息不处理CQ码等格式
                     text.setdefault('auto_escape', False)
                     for message in text['text_list']:
                         await send_message(ws, messages, message, text['auto_escape'])

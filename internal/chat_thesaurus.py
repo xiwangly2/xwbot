@@ -29,7 +29,8 @@ async def chat_thesaurus(messages, ws = None):
     if arg_len > 1:
         try:
             arg_all = re.match(arg[0] + ' (.*)', message).group(1)
-        except NameError:
+        except:
+            arg_len = 1
             pass
     else:
         arg_len = 1
@@ -144,16 +145,26 @@ async def chat_thesaurus(messages, ws = None):
         elif re.match('\[CQ\:xml,data\=', message):
             text = html.unescape(message)
             text = re.sub(r'\[CQ:xml,data=(.+)\]', r'\1', text)
-            text = ['解析XML:', text]
-        elif re.match('\[CQ\:json,data\=', message):
+            text = {
+                    'auto_escape': True,
+                    'text_list': ['解析XML:', text]
+                }
+        elif re.match(r'\[CQ:json,data=(.+)\]', message):
             text = html.unescape(message)
             text = re.sub(r'\[CQ:json,data=(.+)\]', r'\1', text)
-            text = ['解析JSON:', text]
+            text = {
+                    'auto_escape': True,
+                    'text_list': ['解析JSON:', text]
+                }
         elif re.match('\[CQ\:forward,id\=', message):
             message_id = re.sub(r'\[CQ:forward,id=(.+)\]', r'\1', message)
             text = await get_forward_msg(ws, message_id)
-            text = ['解析合并转发:', text]
+            text = {
+                    'auto_escape': True,
+                    'text_list': ['解析合并转发:', text]
+                }
         elif re.match('^\[CQ\:at,qq=', message) or re.match('^\[CQ\:reply,id=', message) or re.match('^\[CQ\:face,id=', message):
+            # 不处理at、回复、表情开头的CQ码防止刷屏
             text = None
         elif re.match('\[CQ\:.+\]', message):
             text = {
@@ -167,16 +178,21 @@ async def chat_thesaurus(messages, ws = None):
             }
         elif re.match('^\<\?xml', message, re.DOTALL) and is_admin:
             text = message
-            json = {}
-            json['type'] = 'xml'
-            json['data'] = {'data': text}
-            text = ['发送XML:', json]
+            json_data = {
+                    'type': 'xml',
+                    'data': {'data': text}
+                }
+            text = {
+                    'auto_escape': True,
+                    'text_list': ['发送XML:', json_data]
+                }
         elif re.match('^\{', message, re.DOTALL) and is_admin:
             text = message
-            json = {}
-            json['type'] = 'json'
-            json['data'] = {'data': text}
-            text = ['发送JSON:', json]
+            json_data = {
+                'type': 'json',
+                'data': {'data': text}
+            }
+            text = ['发送JSON:', json_data]
         elif config['debug']:
             if arg[0] == '/test':
                 # 测试
