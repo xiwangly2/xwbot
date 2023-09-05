@@ -30,10 +30,10 @@ async def chat_thesaurus(messages, ws, xwbot_config):
     is_admin = await f_is_admin(messages['user_id'], xwbot_config['admin'])
     try:
         # 查询开关
-        bot_switch = Database().bot_switch(messages['group_id'])
+        bot_switch = Database(xwbot_config).bot_switch(messages['group_id'])
         if bot_switch is None or len(bot_switch) == 0:
             if arg[0] == '/on' and is_admin:
-                Database().bot_switch(messages['group_id'], 1)
+                Database(xwbot_config).bot_switch(messages['group_id'], 1)
             text = "Bot started successfully."
         else:
             bot_switch = bot_switch[0][1]
@@ -45,7 +45,7 @@ async def chat_thesaurus(messages, ws, xwbot_config):
         pass
     if bot_switch == '0':
         if arg[0] == '/on' and is_admin:
-            Database().bot_switch(messages['group_id'], 1)
+            Database(xwbot_config).bot_switch(messages['group_id'], 1)
             text = "Bot started successfully."
         else:
             text = None
@@ -54,7 +54,7 @@ async def chat_thesaurus(messages, ws, xwbot_config):
         if arg[0] == '/on' and is_admin:
             text = "Bot is running."
         elif arg[0] == '/off' and is_admin:
-            Database().bot_switch(messages['group_id'], 0)
+            Database(xwbot_config).bot_switch(messages['group_id'], 0)
             text = "Bot is off."
         elif arg[0] == '/help':
             text = "这是一个帮助列表<Response [200]>"
@@ -216,7 +216,7 @@ async def main():
     # 测试
     messages = {...}  # 消息内容
 
-    text = await chat_thesaurus(messages)
+    text = await chat_thesaurus(messages, xwbot_config)
     print(text)
 
 

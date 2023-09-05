@@ -27,5 +27,7 @@ async def run_bot(xwbot_config):
 
 
 if __name__ == '__main__':
-    xwbot_config = asyncio.run(load_config())
+    # 判断变量是否存在，如果不存在就初始化
+    if 'xwbot_config' not in locals():
+        xwbot_config = asyncio.run(load_config())
     asyncio.run(run_bot(xwbot_config))

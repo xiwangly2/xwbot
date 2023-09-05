@@ -27,7 +27,8 @@ async def f_is_admin(target_id, xwbot_config_admin):
         return True
     else:
         return False
-    
+
+
 # 获取群 @全体成员 剩余次数
 async def get_group_at_all_remain(ws, group_id):
     params = {
@@ -154,7 +155,7 @@ async def while_msg(ws, xwbot_config):
 
             if xwbot_config['write_log']:
                 # 日志写入数据库
-                Database().chat_logs(messages)
+                Database(xwbot_config).chat_logs(messages)
 
             # 查找词库获取回答
             text = await chat_thesaurus(messages, ws, xwbot_config)

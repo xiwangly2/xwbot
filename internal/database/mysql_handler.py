@@ -1,20 +1,18 @@
 import asyncio
 import datetime
 import json
+import time
 import traceback
 
 import pymysql
 from dbutils.pooled_db import PooledDB
 from pymysql.converters import escape_string
 
-# 导入自己写的模块
-from internal.config import load_config
-
-xwbot_config = asyncio.run(load_config())
 
 
 class Database:
-    def __init__(self):
+    def __init__(self, xwbot_config):
+        self.xwbot_config = xwbot_config
         # 创建数据库连接池
         try:
             self.pool = PooledDB(
@@ -45,7 +43,7 @@ class Database:
             cursor.close()
             conn.close()  # 将连接放回连接池
         except Exception:
-            if xwbot_config['debug']:
+            if self.xwbot_config['debug']:
                 traceback.print_exc()
 
     def bot_switch(self, group_id='0', switch=None):
@@ -67,5 +65,5 @@ class Database:
             cursor.close()
             conn.close()  # 将连接放回连接池
         except Exception:
-            if xwbot_config['debug']:
+            if self.xwbot_config['debug']:
                 traceback.print_exc()
