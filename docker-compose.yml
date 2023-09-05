@@ -1,0 +1,38 @@
+version: '3'
+services:
+  xwbot:
+    image: ghcr.io/xiwangly2/xwbot:main # 使用 ghcr 镜像，或者替换为你的镜像名称
+    container_name: xwbot
+    restart: always
+    networks:
+      - host
+    volumes:
+      - ./config:/app/config
+    # 环境变量可以在此处添加，根据需要自行配置
+
+  go-cqhttp:
+    image: mrs4s/cqhttp:latest # 使用 go-cqhttp 镜像
+    container_name: go-cqhttp
+    restart: always
+    volumes:
+      - ./go-cqhttp:/data
+    ports:
+      - "9000:9000" # 请根据需要配置端口
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: your_root_password # 替换为您的MySQL root密码
+      MYSQL_DATABASE: xwbot_db # 替换为您的数据库名称
+      MYSQL_USER: xwbot_user # 替换为您的数据库用户名
+      MYSQL_PASSWORD: your_db_password # 替换为您的数据库密码
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+    ports:
+      - "3306:3306" # 如果需要从主机访问MySQL，请根据需要配置端口
+
+networks:
+  host:
+    external: true
