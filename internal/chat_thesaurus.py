@@ -8,6 +8,7 @@ import requests
 # 导入自己写的模块
 from internal.functions import *
 
+
 async def chat_thesaurus(messages, ws, xwbot_config):
     # 消息文本内容
     message = html.unescape(messages['message'])

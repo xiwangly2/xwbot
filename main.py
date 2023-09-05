@@ -1,9 +1,11 @@
 import asyncio
+
 import aiohttp
 
 # 导入自己写的模块
 from internal.config import load_config
 from internal.functions import *
+
 
 # 运行机器人
 async def run_bot(xwbot_config):
@@ -22,6 +24,7 @@ async def run_bot(xwbot_config):
         await print_green("Notice: WebSocket connection established successfully.")
         await receive_messages(ws, xwbot_config['access_token'])
         await while_msg(ws, xwbot_config)
+
 
 if __name__ == '__main__':
     xwbot_config = asyncio.run(load_config())

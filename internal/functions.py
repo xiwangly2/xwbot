@@ -6,6 +6,7 @@ from internal.chat_thesaurus import chat_thesaurus
 # 导入自己写的模块
 from internal.database.mysql_handler import Database
 
+
 # 输出红色错误消息的函数
 async def print_error(message):
     print(Fore.RED + message + Style.RESET_ALL)
@@ -19,12 +20,14 @@ async def print_warning(message):
 async def print_green(message):
     print(Fore.GREEN + message + Style.RESET_ALL)
 
+
 # 判断QQ号是否在管理员列表里
 async def f_is_admin(target_id, xwbot_config_admin):
     if target_id in xwbot_config_admin:
         return True
     else:
         return False
+
 
 # 构造 API 请求数据
 async def build_api_data(action, params):
@@ -44,7 +47,7 @@ async def send_api_request(ws, action, params):
 
 
 # 接收消息
-async def receive_messages(ws ,xwbot_config_access_token):
+async def receive_messages(ws, xwbot_config_access_token):
     event = {"action": "get_login_info", "params": {"access_token": xwbot_config_access_token}}
     await ws.send_str(json.dumps(event))
 
@@ -96,7 +99,7 @@ async def get_forward_msg(ws, message_id):
     return await send_api_request(ws, 'get_forward_msg', params)
 
 
-async def while_msg(ws,xwbot_config):
+async def while_msg(ws, xwbot_config):
     while True:
         try:
             # 控制跳出
@@ -109,7 +112,8 @@ async def while_msg(ws,xwbot_config):
                 import time
                 # 清空终端窗口输出
                 await clear_terminal()
-                await print_error("Error: [" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "] Connection is lost.")
+                await print_error(
+                    "Error: [" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "] Connection is lost.")
                 await ws.close()
                 break
             # 定义可能不存在的键，防止报错

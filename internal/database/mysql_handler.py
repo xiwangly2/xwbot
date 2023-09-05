@@ -11,6 +11,7 @@ from internal.config import load_config
 
 xwbot_config = load_config()
 
+
 class Database:
     def __init__(self):
         # 创建数据库连接池
