@@ -4,7 +4,7 @@
 class Database:
     def __init__(self, xwbot_config):
         if xwbot_config['select_database'] == 'mysql':
-            pass
+            from internal.database.mysql_handler import Database
         elif xwbot_config['select_database'] == 'sqlite':
             pass
         elif xwbot_config['select_database'] == 'mongo':

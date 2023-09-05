@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import json
 import traceback
@@ -9,7 +10,7 @@ from pymysql.converters import escape_string
 # 导入自己写的模块
 from internal.config import load_config
 
-xwbot_config = load_config()
+xwbot_config = asyncio.run(load_config())
 
 
 class Database:

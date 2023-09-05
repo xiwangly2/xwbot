@@ -7,6 +7,7 @@ import requests
 
 # 导入自己写的模块
 from internal.functions import *
+from internal.database.mysql_handler import Database
 
 
 async def chat_thesaurus(messages, ws, xwbot_config):

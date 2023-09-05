@@ -2,6 +2,8 @@ import os
 
 import yaml
 
+# from internal.functions import print_warning
+
 xwbot_config = None
 
 
@@ -13,7 +15,7 @@ async def load_config():
             with open('config/config.yml', 'r', encoding='utf-8') as f:
                 xwbot_config = yaml.load(f.read(), Loader=yaml.FullLoader)
         else:
-            # print_warning("Warning: No configuration file found, the example file will be used.")
+            print_warning("Warning: No configuration file found, the example file will be used.")
             with open('config/config_example.yml', 'r', encoding='utf-8') as f:
                 xwbot_config = yaml.load(f.read(), Loader=yaml.FullLoader)
     return xwbot_config

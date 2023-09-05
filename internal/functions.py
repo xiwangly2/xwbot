@@ -2,8 +2,8 @@ import json
 
 from colorama import Fore, Style
 
-from internal.chat_thesaurus import chat_thesaurus
 # 导入自己写的模块
+from internal.chat_thesaurus import chat_thesaurus
 from internal.database.mysql_handler import Database
 
 
@@ -27,6 +27,29 @@ async def f_is_admin(target_id, xwbot_config_admin):
         return True
     else:
         return False
+    
+# 获取群 @全体成员 剩余次数
+async def get_group_at_all_remain(ws, group_id):
+    params = {
+        'group_id': group_id
+    }
+    return await send_api_request(ws, 'get_group_at_all_remain', params)
+
+
+# 获取群系统消息
+async def get_group_system_msg(ws, group_id):
+    params = {
+        'group_id': group_id
+    }
+    return await send_api_request(ws, 'get_group_system_msg', params)
+
+
+# 获取消息
+async def get_msg(ws, message_id):
+    params = {
+        'message_id': message_id
+    }
+    return await send_api_request(ws, 'get_msg', params)
 
 
 # 构造 API 请求数据
