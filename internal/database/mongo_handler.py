@@ -1,7 +1,9 @@
 import datetime
 import json
 import traceback
+
 from pymongo import MongoClient
+
 
 class Database:
     def __init__(self, config):

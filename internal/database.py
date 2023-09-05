@@ -1,17 +1,18 @@
 # 暂时弃用
-import yaml
+
 
 class Database:
-    def __init__(self, config):
-        if config['select_database']  ==  'mysql':
-            from internal.database.mysql_handler import Database
-        elif config['select_database'] == 'sqlite':
+    def __init__(self, xwbot_config):
+        if xwbot_config['select_database'] == 'mysql':
             pass
-        elif config['select_database'] == 'mongo':
+        elif xwbot_config['select_database'] == 'sqlite':
             pass
-        elif config['select_database'] == 'postgresql':
+        elif xwbot_config['select_database'] == 'mongo':
+            pass
+        elif xwbot_config['select_database'] == 'postgresql':
             pass
         else:
             pass
-    def connect(self, config):
+
+    def connect(self, xwbot_config):
         pass
