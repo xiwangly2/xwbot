@@ -4,6 +4,7 @@ from colorama import Fore, Style
 
 # 导入自己写的模块
 from internal.chat_thesaurus import chat_thesaurus
+from internal.config import *
 from internal.database.mysql_handler import Database
 
 
@@ -22,8 +23,8 @@ async def print_green(message):
 
 
 # 判断QQ号是否在管理员列表里
-async def f_is_admin(target_id, xwbot_config_admin):
-    if target_id in xwbot_config_admin:
+async def f_is_admin(target_id, global_config_admin):
+    if target_id in global_config_admin:
         return True
     else:
         return False
@@ -71,8 +72,8 @@ async def send_api_request(ws, action, params):
 
 
 # 接收消息
-async def receive_messages(ws, xwbot_config_access_token):
-    event = {"action": "get_login_info", "params": {"access_token": xwbot_config_access_token}}
+async def receive_messages(ws, global_config_access_token):
+    event = {"action": "get_login_info", "params": {"access_token": global_config_access_token}}
     await ws.send_str(json.dumps(event))
 
 
@@ -123,7 +124,7 @@ async def get_forward_msg(ws, message_id):
     return await send_api_request(ws, 'get_forward_msg', params)
 
 
-async def while_msg(ws, xwbot_config):
+async def while_msg(ws, global_config):
     while True:
         try:
             # 控制跳出
@@ -150,15 +151,15 @@ async def while_msg(ws, xwbot_config):
             if messages['post_type'] != "message":
                 raise StopIteration
 
-            if xwbot_config['debug']:
+            if global_config['debug']:
                 print(messages)
 
-            if xwbot_config['write_log']:
+            if global_config['write_log']:
                 # 日志写入数据库
-                Database(xwbot_config).chat_logs(messages)
+                Database(global_config).chat_logs(messages)
 
             # 查找词库获取回答
-            text = await chat_thesaurus(messages, ws, xwbot_config)
+            text = await chat_thesaurus(messages, ws, global_config)
             if text is None:
                 raise StopIteration
             if isinstance(text, str):

@@ -7,10 +7,12 @@ import requests
 
 # 导入自己写的模块
 from internal.functions import *
+from internal.config import *
 from internal.database.mysql_handler import Database
 
 
-async def chat_thesaurus(messages, ws, xwbot_config):
+async def chat_thesaurus(messages, ws, global_config):
+    global xwbot_database
     # 消息文本内容
     message = html.unescape(messages['message'])
     # 按空格分隔参数
@@ -27,25 +29,25 @@ async def chat_thesaurus(messages, ws, xwbot_config):
     else:
         arg_len = 1
 
-    is_admin = await f_is_admin(messages['user_id'], xwbot_config['admin'])
+    is_admin = await f_is_admin(messages['user_id'], global_config['admin'])
     try:
         # 查询开关
-        bot_switch = Database(xwbot_config).bot_switch(messages['group_id'])
+        bot_switch = xwbot_database.bot_switch(messages['group_id'])
         if bot_switch is None or len(bot_switch) == 0:
             if arg[0] == '/on' and is_admin:
-                Database(xwbot_config).bot_switch(messages['group_id'], 1)
+                Database(global_config).bot_switch(messages['group_id'], 1)
             text = "Bot started successfully."
         else:
             bot_switch = bot_switch[0][1]
     except NameError:
         bot_switch = '0'
-        if xwbot_config['debug']:
+        if global_config['debug']:
             import traceback
             traceback.print_exc()
         pass
     if bot_switch == '0':
         if arg[0] == '/on' and is_admin:
-            Database(xwbot_config).bot_switch(messages['group_id'], 1)
+            Database(global_config).bot_switch(messages['group_id'], 1)
             text = "Bot started successfully."
         else:
             text = None
@@ -54,7 +56,7 @@ async def chat_thesaurus(messages, ws, xwbot_config):
         if arg[0] == '/on' and is_admin:
             text = "Bot is running."
         elif arg[0] == '/off' and is_admin:
-            Database(xwbot_config).bot_switch(messages['group_id'], 0)
+            Database(global_config).bot_switch(messages['group_id'], 0)
             text = "Bot is off."
         elif arg[0] == '/help':
             text = "这是一个帮助列表<Response [200]>"
@@ -198,7 +200,7 @@ async def chat_thesaurus(messages, ws, xwbot_config):
                 'data': {'data': text}
             }
             text = ['发送JSON:', json_data]
-        elif xwbot_config['debug']:
+        elif global_config['debug']:
             if arg[0] == '/test':
                 # 测试
                 # text = ['第一条消息', '第二条消息']
@@ -216,7 +218,7 @@ async def main():
     # 测试
     messages = {...}  # 消息内容
 
-    text = await chat_thesaurus(messages, xwbot_config)
+    text = await chat_thesaurus(messages, global_config)
     print(text)
 
 

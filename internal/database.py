@@ -2,17 +2,17 @@
 
 
 class Database:
-    def __init__(self, xwbot_config):
-        if xwbot_config['select_database'] == 'mysql':
+    def __init__(self, global_config):
+        if global_config['select_database'] == 'mysql':
             from internal.database.mysql_handler import Database
-        elif xwbot_config['select_database'] == 'sqlite':
+        elif global_config['select_database'] == 'sqlite':
             pass
-        elif xwbot_config['select_database'] == 'mongo':
+        elif global_config['select_database'] == 'mongo':
             pass
-        elif xwbot_config['select_database'] == 'postgresql':
+        elif global_config['select_database'] == 'postgresql':
             pass
         else:
             pass
 
-    def connect(self, xwbot_config):
+    def connect(self, global_config):
         pass

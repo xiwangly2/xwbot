@@ -11,19 +11,19 @@ from pymysql.converters import escape_string
 
 
 class Database:
-    def __init__(self, xwbot_config):
-        self.xwbot_config = xwbot_config
+    def __init__(self, global_config):
+        self.global_config = global_config
         # 创建数据库连接池
         try:
             self.pool = PooledDB(
                 creator=pymysql,  # 使用 PyMySQL 作为数据库连接库
                 maxconnections=10,  # 设置最大连接数
-                host=xwbot_config['mysql']['host'], user=xwbot_config['mysql']['user'],
-                password=xwbot_config['mysql']['password'], database=xwbot_config['mysql']['database']  # 将配置参数传递给连接池
+                host=global_config['mysql']['host'], user=global_config['mysql']['user'],
+                password=global_config['mysql']['password'], database=global_config['mysql']['database']  # 将配置参数传递给连接池
             )
         except Exception:
             print("Could not create database connection pool")
-            if xwbot_config['debug']:
+            if self.global_config['debug']:
                 traceback.print_exc()
 
     def chat_logs(self, messages=None):
@@ -43,7 +43,7 @@ class Database:
             cursor.close()
             conn.close()  # 将连接放回连接池
         except Exception:
-            if self.xwbot_config['debug']:
+            if self.global_config['debug']:
                 traceback.print_exc()
 
     def bot_switch(self, group_id='0', switch=None):
@@ -65,5 +65,5 @@ class Database:
             cursor.close()
             conn.close()  # 将连接放回连接池
         except Exception:
-            if self.xwbot_config['debug']:
+            if self.global_config['debug']:
                 traceback.print_exc()
