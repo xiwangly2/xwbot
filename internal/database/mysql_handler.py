@@ -1,17 +1,11 @@
-import asyncio
 import datetime
 import json
 import traceback
-
-import pymysql
 from dbutils.pooled_db import PooledDB
+import pymysql
 from pymysql.converters import escape_string
-
 # 导入自己写的模块
-from internal.config import load_config
-
-xwbot_config = asyncio.run(load_config())
-
+from internal.config import config
 
 class Database:
     def __init__(self):
@@ -20,12 +14,12 @@ class Database:
             self.pool = PooledDB(
                 creator=pymysql,  # 使用 PyMySQL 作为数据库连接库
                 maxconnections=10,  # 设置最大连接数
-                host=xwbot_config['mysql']['host'], user=xwbot_config['mysql']['user'],
-                password=xwbot_config['mysql']['password'], database=xwbot_config['mysql']['database']  # 将配置参数传递给连接池
+                host=config['mysql']['host'], user=config['mysql']['user'],
+                                      password=config['mysql']['password'], database=config['mysql']['database'] # 将配置参数传递给连接池
             )
         except Exception:
             print("Could not create database connection pool")
-            if xwbot_config['debug']:
+            if config['debug']:
                 traceback.print_exc()
 
     def chat_logs(self, messages=None):
@@ -45,7 +39,7 @@ class Database:
             cursor.close()
             conn.close()  # 将连接放回连接池
         except Exception:
-            if xwbot_config['debug']:
+            if config['debug']:
                 traceback.print_exc()
 
     def bot_switch(self, group_id='0', switch=None):
@@ -67,5 +61,5 @@ class Database:
             cursor.close()
             conn.close()  # 将连接放回连接池
         except Exception:
-            if xwbot_config['debug']:
+            if config['debug']:
                 traceback.print_exc()

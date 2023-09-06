@@ -1,16 +1,24 @@
-import asyncio
 import html
 import re
-
+import asyncio
 import aiohttp
 import requests
 
 # 导入自己写的模块
+from internal.config import config
 from internal.functions import *
 from internal.database.mysql_handler import Database
 
 
-async def chat_thesaurus(messages, ws, xwbot_config):
+# 判断QQ号是否在管理员列表里
+def f_is_admin(target_id):
+    if f"{target_id}" in config['admin']:
+        return True
+    else:
+        return False
+
+
+async def chat_thesaurus(messages, ws = None):
     # 消息文本内容
     message = html.unescape(messages['message'])
     # 按空格分隔参数
@@ -21,12 +29,13 @@ async def chat_thesaurus(messages, ws, xwbot_config):
     if arg_len > 1:
         try:
             arg_all = re.match(arg[0] + ' (.*)', message).group(1)
-        except NameError:
+        except:
+            arg_len = 1
             pass
     else:
         arg_len = 1
 
-    is_admin = await f_is_admin(messages['user_id'], xwbot_config['admin'])
+    is_admin = f_is_admin(messages['user_id'])
     try:
         # 查询开关
         bot_switch = Database().bot_switch(messages['group_id'])
@@ -38,7 +47,7 @@ async def chat_thesaurus(messages, ws, xwbot_config):
             bot_switch = bot_switch[0][1]
     except NameError:
         bot_switch = '0'
-        if xwbot_config['debug']:
+        if config['debug']:
             import traceback
             traceback.print_exc()
         pass
@@ -102,14 +111,11 @@ async def chat_thesaurus(messages, ws, xwbot_config):
         elif re.match('\d{1,3}', message):
             text = "选项"
         elif arg[0] == '/calc':
-            if arg_len > 1:
-                import math
-                try:
-                    text = eval(arg_all, {"__builtins__": None}, {"math": math})
-                except ArithmeticError:
-                    text = "计算错误，表达式不合法"
-            else:
-                text = "/calc params"
+            import math
+            try:
+                text = eval(arg_all, {"__builtins__": None}, {"math": math})
+            except ArithmeticError:
+                text = "计算错误，表达式不合法"
         elif arg[0] == '/uuid':
             import uuid
             if arg_len == 1:
@@ -136,38 +142,28 @@ async def chat_thesaurus(messages, ws, xwbot_config):
 /gold user(object) number - 增加金币(admin)\n\
 注：[]表示参数可选，部分命令可通过[]的数字简化选择\n\
 ********************'
-        elif re.match('^\[CQ\:reply,id=', message):
-            # 回复表情包则添加
-            message_id = re.sub(r'\[CQ\:reply,id\=(-?\d+)\].+', r'\1', message)
-            get_message1 = await get_msg(ws, message_id)
-            print(get_message1)
-            text = {
-                'auto_escape': True,
-                'text_list': ['message_id:', get_message1[message]]
-            }
         elif re.match('\[CQ\:xml,data\=', message):
             text = html.unescape(message)
             text = re.sub(r'\[CQ:xml,data=(.+)\]', r'\1', text)
             text = {
-                'auto_escape': True,
-                'text_list': ['解析XML:', text]
-            }
+                    'auto_escape': True,
+                    'text_list': ['解析XML:', text]
+                }
         elif re.match(r'\[CQ:json,data=(.+)\]', message):
             text = html.unescape(message)
             text = re.sub(r'\[CQ:json,data=(.+)\]', r'\1', text)
             text = {
-                'auto_escape': True,
-                'text_list': ['解析JSON:', text]
-            }
+                    'auto_escape': True,
+                    'text_list': ['解析JSON:', text]
+                }
         elif re.match('\[CQ\:forward,id\=', message):
             message_id = re.sub(r'\[CQ:forward,id=(.+)\]', r'\1', message)
             text = await get_forward_msg(ws, message_id)
             text = {
-                'auto_escape': True,
-                'text_list': ['解析合并转发:', text]
-            }
-        elif re.match('^\[CQ\:at,qq=', message) or re.match('^\[CQ\:reply,id=', message) or re.match('^\[CQ\:face,id=',
-                                                                                                     message):
+                    'auto_escape': True,
+                    'text_list': ['解析合并转发:', text]
+                }
+        elif re.match('^\[CQ\:at,qq=', message) or re.match('^\[CQ\:reply,id=', message) or re.match('^\[CQ\:face,id=', message):
             # 不处理at、回复、表情开头的CQ码防止刷屏
             text = None
         elif re.match('\[CQ\:.+\]', message):
@@ -183,13 +179,13 @@ async def chat_thesaurus(messages, ws, xwbot_config):
         elif re.match('^\<\?xml', message, re.DOTALL) and is_admin:
             text = message
             json_data = {
-                'type': 'xml',
-                'data': {'data': text}
-            }
+                    'type': 'xml',
+                    'data': {'data': text}
+                }
             text = {
-                'auto_escape': True,
-                'text_list': ['发送XML:', json_data]
-            }
+                    'auto_escape': True,
+                    'text_list': ['发送XML:', json_data]
+                }
         elif re.match('^\{', message, re.DOTALL) and is_admin:
             text = message
             json_data = {
@@ -197,7 +193,7 @@ async def chat_thesaurus(messages, ws, xwbot_config):
                 'data': {'data': text}
             }
             text = ['发送JSON:', json_data]
-        elif xwbot_config['debug']:
+        elif config['debug']:
             if arg[0] == '/test':
                 # 测试
                 # text = ['第一条消息', '第二条消息']
@@ -206,7 +202,6 @@ async def chat_thesaurus(messages, ws, xwbot_config):
                     'text_list': ['第一条消息', '第二条消息', messages]
                 }
         else:
-            # 不匹配任何规则
             text = None
         return text
 
