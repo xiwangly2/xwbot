@@ -21,8 +21,7 @@ async def chat_thesaurus(messages, ws, xwbot_config):
     if arg_len > 1:
         try:
             arg_all = re.match(arg[0] + ' (.*)', message).group(1)
-        except:
-            arg_len = 1
+        except NameError:
             pass
     else:
         arg_len = 1
