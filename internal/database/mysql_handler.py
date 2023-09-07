@@ -1,6 +1,6 @@
-import datetime
 import json
 import traceback
+from datetime import datetime
 from dbutils.pooled_db import PooledDB
 import pymysql
 from pymysql.converters import escape_string
@@ -31,7 +31,7 @@ class Database:
             messages = escape_string(messages)
 
             # 插入 SQL 记录
-            date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            date = datetime.now()
             cursor.execute(
                 f"INSERT INTO `logs` (`id`, `json`, `time`) VALUES (null, '{messages}', '{date}')")
 
@@ -49,7 +49,7 @@ class Database:
 
             if switch is not None:
                 # 插入 SQL 记录
-                date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                date = datetime.now()
                 cursor.execute(
                     f"REPLACE INTO `switch` (`group_id`, `switch`, `time`) VALUES ('{group_id}', '{switch}', '{date}')")
             else:
