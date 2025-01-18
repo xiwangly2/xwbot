@@ -6,7 +6,6 @@ from internal.config import config
 messages = None
 message = None
 
-
 def parse_dic_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         text = file.read()
