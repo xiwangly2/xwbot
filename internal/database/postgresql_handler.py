@@ -2,6 +2,8 @@ import hashlib
 import json
 import traceback
 from datetime import datetime
+from xmlrpc.client import Boolean
+
 import psycopg2
 from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
@@ -53,25 +55,32 @@ class PostgreSQLDatabase:
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
             if switch is not None:
-                # Insert SQL record
+                # Insert or update SQL record
                 date = datetime.now()
                 cursor.execute(
                     "INSERT INTO switch (group_id, switch, time) VALUES (%s, %s, %s) ON CONFLICT (group_id) DO UPDATE SET switch = EXCLUDED.switch, time = EXCLUDED.time",
                     (group_id, switch, date)
                 )
+                conn.commit()  # Commit transaction
+                cursor.close()
+                self.pool.putconn(conn)  # Return connection to pool
+                return True
             else:
                 cursor.execute(
-                    "SELECT * FROM switch WHERE group_id = %s",
+                    "SELECT switch FROM switch WHERE group_id = %s",
                     (group_id,)
                 )
-                return cursor.fetchall()
-
-            conn.commit()  # Commit transaction
-            cursor.close()
-            self.pool.putconn(conn)  # Return connection to pool
+                result = cursor.fetchone()
+                cursor.close()
+                self.pool.putconn(conn)  # Return connection to pool
+                if result:
+                    return result['switch'] == '1'
+                else:
+                    return False
         except Exception:
             if config['debug']:
                 traceback.print_exc()
+            return False
 
     def image_exists(self, sha256_hash, md5_hash):
         try:

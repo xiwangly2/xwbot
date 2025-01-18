@@ -48,25 +48,25 @@ async def chat_thesaurus(messages, ws=None):
     try:
         # 查询开关
         bot_switch = Database().db_handler.bot_switch(messages['group_id'])
-        if bot_switch is None or len(bot_switch) == 0:
+        if bot_switch is None:
             if arg[0] == '/on' and is_admin:
                 Database().db_handler.bot_switch(messages['group_id'], 1)
             text = "Bot started successfully."
             return text
     except NameError:
-        bot_switch = '0'
+        bot_switch = False
         if config['debug']:
             import traceback
             traceback.print_exc()
         pass
-    if bot_switch == '0':
+    if bot_switch is False:
         if arg[0] == '/on' and is_admin:
             Database().db_handler.bot_switch(messages['group_id'], 1)
             text = "Bot started successfully."
         else:
             text = None
         return text
-    elif bot_switch == '1':
+    elif bot_switch is True:
         if arg[0] == '/on' and is_admin:
             text = "Bot is running."
         elif arg[0] == '/off' and is_admin:
@@ -224,7 +224,6 @@ async def chat_thesaurus(messages, ws=None):
                 text = None
         else:
             text = None
-        print_pink(f"text内容:{text}")
         return text
 
 
@@ -279,6 +278,8 @@ async def while_msg(ws):
                 for message in text:
                     await send_message(ws, messages, message, False)
         except Exception:
-            print(f"Error: {Exception}")
-            import traceback
-            traceback.print_exc()
+            if config['debug']:
+                import traceback
+                traceback.print_exc()
+            else:
+                pass
