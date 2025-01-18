@@ -28,5 +28,8 @@ async def run_bot():
 
 
 if __name__ == '__main__':
-    while True:
+    if config['auto_reconnect']:
+        while True:
+            asyncio.run(run_bot())
+    else:
         asyncio.run(run_bot())

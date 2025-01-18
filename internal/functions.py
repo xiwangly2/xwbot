@@ -76,10 +76,11 @@ async def send_message(ws, messages, text, auto_escape=False):
     if messages['message_type'] == 'private':
         # 处理私聊消息
         params['user_id'] = messages['user_id']
+        return await send_api_request(ws, 'send_private_msg_async', params)
     elif messages['message_type'] == 'group':
         # 处理群聊消息
         params['group_id'] = messages['group_id']
-    return await send_api_request(ws, 'send_msg', params)
+        return await send_api_request(ws, 'send_group_msg_async', params)
 
 
 # 解析合并转发
