@@ -13,11 +13,7 @@ class MongoDatabase:
         try:
             # 建立与MongoDB的连接
             self.client = MongoClient(
-                host=config['mongodb']['host'],
-                port=config['mongodb']['port'],
-                username=config['mongodb']['username'],
-                password=config['mongodb']['password'],
-                authSource=config['mongodb']['database']
+                uri=config['mongodb']['uri']
             )
             self.db = self.client[config['mongodb']['database']]  # 选择数据库
         except Exception:

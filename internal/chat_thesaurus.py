@@ -21,6 +21,7 @@ def f_is_admin(target_id):
 async def chat_thesaurus(messages, ws=None):
     # 消息文本内容
     message = html.unescape(messages['message'])
+    print_green(f"消息内容:{message}")
     # 按空格分隔参数
     arg = re.split(r'\s', message)
     # 计算参数数量
@@ -217,4 +218,5 @@ async def chat_thesaurus(messages, ws=None):
                 text = None
         else:
             text = None
+        print(f"消息内容:{text}")
         return text

@@ -12,7 +12,7 @@ CREATE TABLE logs (
 -- Drop and create the `switch` table
 DROP TABLE IF EXISTS switch;
 CREATE TABLE switch (
-    group_id INTEGER PRIMARY KEY,
+    group_id BIGSERIAL PRIMARY KEY,
     switch VARCHAR(255) NOT NULL,
     time TIMESTAMP NOT NULL
 );

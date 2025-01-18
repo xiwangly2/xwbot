@@ -38,7 +38,7 @@ CREATE TABLE `logs`
 DROP TABLE IF EXISTS `switch`;
 CREATE TABLE `switch`
 (
-    `group_id` int(11)                                                       NOT NULL,
+    `group_id` bigint(20)                                                       NOT NULL,
     `switch`   varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
     `time`     datetime                                                      NOT NULL,
     PRIMARY KEY (`group_id`) USING BTREE

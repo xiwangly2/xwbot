@@ -10,11 +10,11 @@ debug: false
 # 写日志
 write_log: true
 # 选择数据库
-select_database: 'sqlite'
+select_database: 'mysql'
 
 # 管理员列表
 admin:
-  - '1334850101'
+  - '1000'
 
 # mysql数据库配置
 mysql:
@@ -35,3 +35,7 @@ postgresql:
 # sqlite数据库配置
 sqlite:
   database: 'xwbot.db3'
+
+# mongodb数据库配置
+mongodb:
+  uri: 'mongodb://localhost:27017'
