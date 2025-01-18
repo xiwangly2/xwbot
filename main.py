@@ -1,9 +1,8 @@
 import asyncio
+
 import aiohttp
 
-
 # 导入自己写的模块
-from internal.config import config
 from internal.functions import *
 
 
@@ -12,8 +11,8 @@ async def run_bot():
     async with aiohttp.ClientSession() as session:
         try:
             ws = await session.ws_connect(f"ws://{config['host']}:{config['port']}/",
-                                        headers={"Authorization": f"Bearer {config['access_token']}"})
-        except:
+                                          headers={"Authorization": f"Bearer {config['access_token']}"})
+        except Exception:
             # 清空终端窗口输出
             clear_terminal()
             if config['debug']:

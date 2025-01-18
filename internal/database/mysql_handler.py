@@ -8,6 +8,7 @@ from pymysql.converters import escape_string
 # 导入自己写的模块
 from internal.config import config
 
+
 class MySQLDatabase:
     def __init__(self):
         # 创建数据库连接池
@@ -16,7 +17,7 @@ class MySQLDatabase:
                 creator=pymysql,  # 使用 PyMySQL 作为数据库连接库
                 maxconnections=10,  # 设置最大连接数
                 host=config['mysql']['host'], user=config['mysql']['user'],
-                                      password=config['mysql']['password'], database=config['mysql']['database'] # 将配置参数传递给连接池
+                password=config['mysql']['password'], database=config['mysql']['database']  # 将配置参数传递给连接池
             )
         except Exception:
             print("Could not create database connection pool")

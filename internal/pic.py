@@ -11,7 +11,7 @@ async def pic(messages, ws=None):
     # 消息文本内容
     message = html.unescape(messages['message'])
     # 按空格分隔参数
-    arg = re.split('\s', message)
+    arg = re.split(r'\s', message)
     # 计算参数数量
     arg_len = len(arg)
     if arg[0] == '/pic':
@@ -45,7 +45,7 @@ async def pic(messages, ws=None):
                 }
             except NameError:
                 pass
-    elif re.match('(.+)?\/savepic(.+)?', message):
+    elif re.match(r'(.+)?\/savepic(.+)?', message):
         # TODO: 保存表情包
         if arg_len >= 2:
             matches = re.findall(r'\[CQ:reply,id=(-?\d+)\]', message)

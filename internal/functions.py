@@ -43,7 +43,7 @@ async def receive_messages(ws):
     event = {"action": "get_login_info", "params": {"access_token": config['access_token']}}
     await ws.send_str(json.dumps(event))
 
-    
+
 # 获取群 @全体成员 剩余次数
 async def get_group_at_all_remain(ws, group_id):
     params = {
@@ -104,7 +104,7 @@ async def while_msg(ws):
                 import time
                 # 清空终端窗口输出
                 clear_terminal()
-                print_error("Error: [" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) +  "] Connection is lost.")
+                print_error("Error: [" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "] Connection is lost.")
                 await ws.close()
                 break
             # 定义可能不存在的键，防止报错
@@ -128,7 +128,7 @@ async def while_msg(ws):
             # 查找词库获取回答
             text = await chat_thesaurus(messages, ws)
             if text is None:
-                raise StopIteration    
+                raise StopIteration
             if isinstance(text, str):
                 await send_message(ws, messages, text, False)
             else:
@@ -140,7 +140,6 @@ async def while_msg(ws):
                 else:
                     for message in text:
                         await send_message(ws, messages, message, False)
-            text = None
         except Exception:
             pass
 
@@ -150,5 +149,5 @@ def clear_terminal():
     import os
     try:
         os.system('cls' if os.name == 'nt' else 'clear')
-    except:
+    except Exception:
         pass

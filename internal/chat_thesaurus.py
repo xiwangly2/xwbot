@@ -1,11 +1,11 @@
+import asyncio
 import html
 import re
-import asyncio
+
 import aiohttp
 import requests
 
 # 导入自己写的模块
-from internal.config import config
 from internal.functions import *
 from internal.database.database import Database
 from internal.pic import pic
@@ -19,11 +19,11 @@ def f_is_admin(target_id):
         return False
 
 
-async def chat_thesaurus(messages, ws = None):
+async def chat_thesaurus(messages, ws=None):
     # 消息文本内容
     message = html.unescape(messages['message'])
     # 按空格分隔参数
-    arg = re.split('\s', message)
+    arg = re.split(r'\s', message)
     # 计算参数数量
     arg_len = len(arg)
     # 捕获一个命令后的所有内容
@@ -31,18 +31,20 @@ async def chat_thesaurus(messages, ws = None):
         try:
             arg_all = re.match(arg[0] + ' (.*)', message).group(1)
         except NameError:
+            arg_all = None
             pass
     else:
         arg_len = 1
+        arg_all = None
 
     is_admin = f_is_admin(messages['user_id'])
     try:
         # 查询开关
-        bot_switch = Database().bot_switch(messages['group_id'])
+        bot_switch = Database().db_handler.bot_switch(messages['group_id'])
         if bot_switch is None or len(bot_switch) == 0:
             if arg[0] == '/on' and is_admin:
-                Database().bot_switch(messages['group_id'], 1)
-            text = "Bot started successfully."
+                Database().db_handler.bot_switch(messages['group_id'], 1)
+            # text = "Bot started successfully."
         else:
             bot_switch = bot_switch[0][1]
     except NameError:
@@ -53,7 +55,7 @@ async def chat_thesaurus(messages, ws = None):
         pass
     if bot_switch == '0':
         if arg[0] == '/on' and is_admin:
-            Database().bot_switch(messages['group_id'], 1)
+            Database().db_handler.db_handler(messages['group_id'], 1)
             text = "Bot started successfully."
         else:
             text = None
@@ -62,7 +64,7 @@ async def chat_thesaurus(messages, ws = None):
         if arg[0] == '/on' and is_admin:
             text = "Bot is running."
         elif arg[0] == '/off' and is_admin:
-            Database().bot_switch(messages['group_id'], 0)
+            Database().db_handler.db_handler(messages['group_id'], 0)
             text = "Bot is off."
         elif arg[0] == '/help':
             text = "这是一个帮助列表<Response [200]>"
@@ -100,15 +102,15 @@ async def chat_thesaurus(messages, ws = None):
                         data['m'] = arg[1]
                     except NameError:
                         pass
-                async with aiohttp.ClientSession() as session:
+                async with aiohttp.ClientSession():
                     header = {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
                     }
-                    response = await requests.post(url="https://api.xiwangly.top/math.php", data=data, headers=header)
+                    response = requests.post(url="https://api.xiwangly.top/math.php", data=data, headers=header)
                     text = f"{response}"
-        elif re.match('_http(s)://', message):
+        elif re.match(r'_http(s)://', message):
             text = "这是一个???"
-        elif re.match('\d{1,3}', message):
+        elif re.match(r'\d{1,3}', message):
             text = "选项"
         elif arg[0] == '/calc':
             import math
@@ -122,6 +124,8 @@ async def chat_thesaurus(messages, ws = None):
                 text = str(uuid.uuid4())
             elif arg_len == 3:
                 text = str(uuid.uuid5(arg[1], arg[2]))
+            else:
+                text = "参数错误"
         elif arg[0] == '/菜单':
             text = '********************\n\
 /菜单 或 /help -帮助\n\
@@ -142,39 +146,40 @@ async def chat_thesaurus(messages, ws = None):
 /gold user(object) number - 增加金币(admin)\n\
 注：[]表示参数可选，部分命令可通过[]的数字简化选择\n\
 ********************'
-        elif re.match('\[CQ\:xml,data\=', message):
+        elif re.match(r'\[CQ\:xml,data\=', message):
             text = html.unescape(message)
             text = re.sub(r'\[CQ:xml,data=(.+)\]', r'\1', text)
             text = {
-                    'auto_escape': True,
-                    'text_list': ['解析XML:', text]
-                }
+                'auto_escape': True,
+                'text_list': ['解析XML:', text]
+            }
         elif re.match(r'\[CQ:json,data=(.+)\]', message):
             text = html.unescape(message)
             text = re.sub(r'\[CQ:json,data=(.+)\]', r'\1', text)
             text = {
-                    'auto_escape': True,
-                    'text_list': ['解析JSON:', text]
-                }
-        elif re.match('\[CQ\:forward,id\=', message):
+                'auto_escape': True,
+                'text_list': ['解析JSON:', text]
+            }
+        elif re.match(r'\[CQ\:forward,id\=', message):
             message_id = re.sub(r'\[CQ:forward,id=(.+)\]', r'\1', message)
             text = await get_forward_msg(ws, message_id)
             text = {
-                    'auto_escape': True,
-                    'text_list': ['解析合并转发:', text]
-                }
-        elif re.match('^\[CQ\:at,qq=', message) or re.match('^\[CQ\:reply,id=', message) or re.match('^\[CQ\:face,id=', message):
+                'auto_escape': True,
+                'text_list': ['解析合并转发:', text]
+            }
+        elif re.match(r'^\[CQ\:at,qq=', message) or re.match(r'^\[CQ\:reply,id=', message) or re.match(
+                r'^\[CQ\:face,id=', message):
             # 不处理at、回复、表情开头的CQ码防止刷屏
             text = None
-        elif re.match('\[CQ\:image.+\]', message):
+        elif re.match(r'\[CQ\:image.+\]', message):
             text = {
                 'auto_escape': True,
                 'text_list': ['解析图像:', message]
             }
-        elif re.match('(.+)?\/(.+)?pic(.+)?', message):
+        elif re.match(r'(.+)?\/(.+)?pic(.+)?', message):
             # 表情包功能
             text = await pic(messages, ws)
-        elif re.match('\[CQ\:.+\]', message):
+        elif re.match(r'\[CQ\:.+\]', message):
             text = {
                 'auto_escape': True,
                 'text_list': ['解析CQ码:', message]
@@ -184,17 +189,17 @@ async def chat_thesaurus(messages, ws = None):
                 'auto_escape': False,
                 'text_list': ['已发送:', arg[1]]
             }
-        elif re.match('^\<\?xml', message, re.DOTALL) and is_admin:
+        elif re.match(r'^\<\?xml', message, re.DOTALL) and is_admin:
             text = message
             json_data = {
-                    'type': 'xml',
-                    'data': {'data': text}
-                }
+                'type': 'xml',
+                'data': {'data': text}
+            }
             text = {
-                    'auto_escape': True,
-                    'text_list': ['发送XML:', json_data]
-                }
-        elif re.match('^\{', message, re.DOTALL) and is_admin:
+                'auto_escape': True,
+                'text_list': ['发送XML:', json_data]
+            }
+        elif re.match(r'^\{', message, re.DOTALL) and is_admin:
             text = message
             json_data = {
                 'type': 'json',
@@ -209,6 +214,8 @@ async def chat_thesaurus(messages, ws = None):
                     'auto_escape': True,
                     'text_list': ['第一条消息', '第二条消息', messages]
                 }
+            else:
+                text = None
         else:
             text = None
         return text
@@ -216,7 +223,7 @@ async def chat_thesaurus(messages, ws = None):
 
 async def main():
     # 测试
-    messages = {...}  # 消息内容
+    messages = "这是一条消息"
 
     text = await chat_thesaurus(messages)
     print(text)
