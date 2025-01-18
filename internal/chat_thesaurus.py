@@ -51,9 +51,8 @@ async def chat_thesaurus(messages, ws=None):
         if bot_switch is None or len(bot_switch) == 0:
             if arg[0] == '/on' and is_admin:
                 Database().db_handler.bot_switch(messages['group_id'], 1)
-            # text = "Bot started successfully."
-        else:
-            bot_switch = bot_switch[0][1]
+            text = "Bot started successfully."
+            return text
     except NameError:
         bot_switch = '0'
         if config['debug']:
@@ -62,7 +61,7 @@ async def chat_thesaurus(messages, ws=None):
         pass
     if bot_switch == '0':
         if arg[0] == '/on' and is_admin:
-            Database().db_handler.db_handler(messages['group_id'], 1)
+            Database().db_handler.bot_switch(messages['group_id'], 1)
             text = "Bot started successfully."
         else:
             text = None
@@ -71,7 +70,7 @@ async def chat_thesaurus(messages, ws=None):
         if arg[0] == '/on' and is_admin:
             text = "Bot is running."
         elif arg[0] == '/off' and is_admin:
-            Database().db_handler.db_handler(messages['group_id'], 0)
+            Database().db_handler.bot_switch(messages['group_id'], 0)
             text = "Bot is off."
         elif arg[0] == '/help':
             text = "这是一个帮助列表<Response [200]>"

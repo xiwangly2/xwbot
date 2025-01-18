@@ -10,6 +10,8 @@
 
 您可以使用 [Docker](#使用docker) 安装，安装前请配置 go-cqhttp 和 MySQL 的连接信息（MySQL 可能需要自己部署）
 
+目前在 dev 更多数据库的支持，……咕咕咕
+
 或者是自己手动部署
 
 下面的内容请根据使用的实际情况修改，不建议直接照抄
@@ -31,6 +33,8 @@
 docker run -itd -v $PWD/xwbot/config:/app/config --name=xwbot --net=host --restart=always ghcr.io/xiwangly2/xwbot:main
 ```
 
+其实你可用不用 host 网络，但是我懒得改了，自己映射要用的端口
+
 ### (三)从 DockerHub 拉取镜像
 
 ```sh
@@ -42,9 +46,6 @@ docker run -itd -v $PWD/xwbot/config:/app/config --name=xwbot --net=host --resta
 移除容器和镜像
 `docker stop xwbot || docker rm xwbot || docker rmi ghcr.io/xiwangly2/xwbot:main`
 
-移除配置文件
-`rm -r /www/wwwroot/go-cqhttp`
-
 要更新的话就再执行一遍安装步骤
 
 ##手动部署
@@ -53,7 +54,9 @@ docker run -itd -v $PWD/xwbot/config:/app/config --name=xwbot --net=host --resta
 
 
 首次使用请将`config/config_example.yml`复制到`config/config.yml`
-并编辑其中的设置，并且正确的配置 [Go-cqhttp](https://github.com/Mrs4s/go-cqhttp) 的正向 websocket 通信
+并编辑其中的设置，并且正确的配置 正向 websocket 通信
+
+现在已适配 OneBot 11，目前我测试了 go-cqhttp 和 NapCat 都没问题
 
 另外，还需要MySQL的存储支持，自己看着办吧
 
