@@ -10,7 +10,7 @@ debug: false
 # 写日志
 write_log: true
 # 遇到错误自动重启
-auto_reconnect: true
+auto_reconnect: false
 # 选择数据库
 select_database: 'mysql'
 
