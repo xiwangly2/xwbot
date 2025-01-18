@@ -21,9 +21,9 @@ async def run_bot():
             if config['debug']:
                 import traceback
                 traceback.print_exc()
-            print_error("Error: Creating websocket connection.")
+            print_error("Creating websocket connection.")
             return
-        print_green("Notice: WebSocket connection established successfully.")
+        print_green("WebSocket connection established successfully.")
         await get_login_info(ws)
         await while_msg(ws)
 
