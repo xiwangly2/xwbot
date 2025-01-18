@@ -113,7 +113,7 @@ async def chat_thesaurus(messages, ws=None):
                     header = {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
                     }
-                    response = requests.post(url="https://api.xiwangly.top/math.php", data=data, headers=header)
+                    response = requests.post(url="https://api.xiwangly.com/math.php", data=data, headers=header)
                     text = f"{response}"
         elif re.match(r'_http(s)://', message):
             text = "这是一个???"
