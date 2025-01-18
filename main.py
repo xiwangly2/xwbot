@@ -4,7 +4,7 @@ import aiohttp
 
 # 导入自己写的模块
 from internal.format_output import clear_terminal, print_error, print_green
-from internal.functions import receive_messages
+from internal.functions import get_login_info
 from internal.chat_thesaurus import while_msg
 from internal.config import config
 
@@ -24,7 +24,7 @@ async def run_bot():
             print_error("Error: Creating websocket connection.")
             return
         print_green("Notice: WebSocket connection established successfully.")
-        await receive_messages(ws)
+        await get_login_info(ws)
         await while_msg(ws)
 
 

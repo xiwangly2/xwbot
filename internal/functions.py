@@ -21,8 +21,8 @@ async def send_api_request(ws, action, params):
     return json.loads(response.data)
 
 
-# 接收消息
-async def receive_messages(ws):
+# 获取登录信息
+async def get_login_info(ws):
     event = {"action": "get_login_info", "params": {"access_token": config['access_token']}}
     await ws.send_str(json.dumps(event))
 
