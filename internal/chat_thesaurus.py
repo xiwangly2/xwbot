@@ -6,8 +6,9 @@ import aiohttp
 import requests
 
 from internal.database.database import Database
+from internal.format_output import clear_terminal, print_pink, print_error
 # 导入自己写的模块
-from internal.functions import print_green, clear_terminal, print_error, send_message, get_forward_msg
+from internal.functions import send_message, get_forward_msg
 from internal.config import config
 from internal.pic import pic
 
@@ -32,7 +33,6 @@ async def chat_thesaurus(messages, ws=None):
         message = ''
         arg = ['']
         arg_len = 0
-    print_green(f"消息内容:{message}")
     # 捕获一个命令后的所有内容
     if arg_len > 1:
         match = re.match(arg[0] + ' (.*)', message)
@@ -225,7 +225,7 @@ async def chat_thesaurus(messages, ws=None):
                 text = None
         else:
             text = None
-        print(f"消息内容:{text}")
+        print_pink(f"text内容:{text}")
         return text
 
 
@@ -242,7 +242,7 @@ async def while_msg(ws):
                 import time
                 # 清空终端窗口输出
                 clear_terminal()
-                print_error("Error: [" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "] Connection is lost.")
+                print_error("[" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "] Connection is lost.")
                 await ws.close()
                 break
             # 定义可能不存在的键，防止报错

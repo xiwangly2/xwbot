@@ -1,23 +1,7 @@
 import json
 
-from colorama import Fore, Style
-
 # 导入自己写的模块
 from internal.config import config
-
-
-# 输出红色错误消息的函数
-def print_error(message):
-    print(Fore.RED + message + Style.RESET_ALL)
-
-
-# 输出黄色警告消息的函数
-def print_warning(message):
-    print(Fore.YELLOW + message + Style.RESET_ALL)
-
-
-def print_green(message):
-    print(Fore.GREEN + message + Style.RESET_ALL)
 
 
 # 构造 API 请求数据
@@ -70,17 +54,18 @@ async def get_msg(ws, message_id):
 # 发送消息
 async def send_message(ws, messages, text, auto_escape=False):
     params = {
-        'message': text,
-        'auto_escape': auto_escape
+        'message': text
     }
+    if auto_escape:
+        params['auto_escape'] = 'true'
     if messages['message_type'] == 'private':
         # 处理私聊消息
         params['user_id'] = messages['user_id']
-        return await send_api_request(ws, 'send_private_msg_async', params)
+        return await send_api_request(ws, 'send_private_msg', params)
     elif messages['message_type'] == 'group':
         # 处理群聊消息
         params['group_id'] = messages['group_id']
-        return await send_api_request(ws, 'send_group_msg_async', params)
+        return await send_api_request(ws, 'send_group_msg', params)
 
 
 # 解析合并转发
@@ -89,12 +74,3 @@ async def get_forward_msg(ws, message_id):
         'message_id': message_id
     }
     return await send_api_request(ws, 'get_forward_msg', params)
-
-
-# 清空终端窗口输出的函数
-def clear_terminal():
-    import os
-    try:
-        os.system('cls' if os.name == 'nt' else 'clear')
-    except Exception:
-        pass

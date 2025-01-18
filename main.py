@@ -3,7 +3,8 @@ import asyncio
 import aiohttp
 
 # 导入自己写的模块
-from internal.functions import print_green, print_error, clear_terminal, receive_messages
+from internal.format_output import clear_terminal, print_error, print_green
+from internal.functions import receive_messages
 from internal.chat_thesaurus import while_msg
 from internal.config import config
 
