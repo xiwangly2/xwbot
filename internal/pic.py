@@ -1,10 +1,7 @@
 import asyncio
 import html
+import json
 import re
-
-from internal.database.database import Database
-from internal.config import *
-from internal.functions import *
 
 
 async def pic(messages, ws=None):

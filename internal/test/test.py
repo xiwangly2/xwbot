@@ -1,21 +1,32 @@
-# import re
-
-# message = '/calc 1111 3+33'
-# result = re.match('/calc (.*)', message).group(1)
-# print(result)
-
 import re
+import html
 
-message = "[CQ:reply,id=-1519369564][CQ:at,qq=1334850101] /savepic 群除我佬.jpg"
-pattern = r'\[CQ:reply,id=(-?\d+)\]'
-matches = re.findall(pattern, message)
+messages = {
+    'message': '[CQ:at,qq=2946692758] /on 1122'
+}
 
-if matches:
-    text = matches[0]  # 提取第一个匹配到的 id
-    text = {
-        'auto_escape': False,
-        'text_list': ['***.jpg', message, "reply id = " + text]
-    }
-    print(text)
+# 消息文本内容
+if messages['message']:
+    message = html.unescape(messages['message'])
+    # 按空格分隔参数
+    arg = re.split(r'\s', message)
+    # 计算参数数量
+    arg_len = len(arg)
 else:
-    print("没有找到匹配的 id。")
+    message = None
+    arg = ['']
+    arg_len = 0
+
+# 捕获一个命令后的所有内容
+if arg_len > 1:
+    match = re.match(arg[0] + ' (.*)', message)
+    if match:
+        arg_all = match.group(1)
+    else:
+        arg_all = None
+else:
+    arg_len = 1
+    arg_all = None
+
+print(arg)
+print(arg_all)

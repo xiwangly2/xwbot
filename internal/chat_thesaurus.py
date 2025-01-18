@@ -1,4 +1,5 @@
 import html
+import json
 import re
 
 import aiohttp
@@ -6,7 +7,8 @@ import requests
 
 from internal.database.database import Database
 # 导入自己写的模块
-from internal.functions import *
+from internal.functions import print_green, clear_terminal, print_error, send_message, get_forward_msg
+from internal.config import config
 from internal.pic import pic
 
 
@@ -20,19 +22,24 @@ def f_is_admin(target_id):
 
 async def chat_thesaurus(messages, ws=None):
     # 消息文本内容
-    message = html.unescape(messages['message'])
+    if messages['message']:
+        message = html.unescape(messages['message'])
+        # 按空格分隔参数
+        arg = re.split(r'\s', message)
+        # 计算参数数量
+        arg_len = len(arg)
+    else:
+        message = ''
+        arg = ['']
+        arg_len = 0
     print_green(f"消息内容:{message}")
-    # 按空格分隔参数
-    arg = re.split(r'\s', message)
-    # 计算参数数量
-    arg_len = len(arg)
     # 捕获一个命令后的所有内容
     if arg_len > 1:
-        try:
-            arg_all = re.match(arg[0] + ' (.*)', message).group(1)
-        except NameError:
+        match = re.match(arg[0] + ' (.*)', message)
+        if match:
+            arg_all = match.group(1)
+        else:
             arg_all = None
-            pass
     else:
         arg_len = 1
         arg_all = None
@@ -220,3 +227,59 @@ async def chat_thesaurus(messages, ws=None):
             text = None
         print(f"消息内容:{text}")
         return text
+
+
+async def while_msg(ws):
+    while True:
+        try:
+            # 控制跳出
+            try:
+                # 接收返回的消息
+                response = await ws.receive()
+                if ws.closed:
+                    raise StopAsyncIteration
+            except Exception:
+                import time
+                # 清空终端窗口输出
+                clear_terminal()
+                print_error("Error: [" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "] Connection is lost.")
+                await ws.close()
+                break
+            # 定义可能不存在的键，防止报错
+            messages = json.loads(response.data)
+            messages.setdefault('post_type', None)
+            messages.setdefault('message_type', None)
+            messages.setdefault('meta_event_type', None)
+            messages.setdefault('group_id', '0')
+            messages.setdefault('user_id', '0')
+            messages.setdefault('message', '')
+
+            # 心跳包
+            if messages['meta_event_type'] == "heartbeat":
+                continue
+
+            if config['debug']:
+                print(messages)
+
+            if config['write_log']:
+                # 日志写入数据库
+                Database().db_handler.chat_logs(messages)
+
+            # 查找词库获取回答
+            text = await chat_thesaurus(messages, ws)
+            if text is None:
+                continue
+            if isinstance(text, str):
+                await send_message(ws, messages, text, False)
+            elif 'text_list' in text:
+                # auto_escape 控制自动格式化消息，这里默认否，即消息不处理CQ码等格式
+                text.setdefault('auto_escape', False)
+                for message in text['text_list']:
+                    await send_message(ws, messages, message, text['auto_escape'])
+            else:
+                for message in text:
+                    await send_message(ws, messages, message, False)
+        except Exception:
+            print(f"Error: {Exception}")
+            import traceback
+            traceback.print_exc()

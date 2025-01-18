@@ -3,7 +3,9 @@ import asyncio
 import aiohttp
 
 # 导入自己写的模块
-from internal.functions import *
+from internal.functions import print_green, print_error, clear_terminal, receive_messages
+from internal.chat_thesaurus import while_msg
+from internal.config import config
 
 
 # 运行机器人
