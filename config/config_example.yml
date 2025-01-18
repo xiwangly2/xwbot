@@ -1,23 +1,37 @@
 # 使用正向websocket
 # go-cqhttp 服务器地址
 host: 'localhost'
-# go-cqhttp 服务器端口
-port: '8080'
+# OneBot WebSocket 服务器端口
+port: '6700'
 # 访问令牌
 access_token: ''
 # 调试模式
 debug: false
 # 写日志
 write_log: true
+# 选择数据库
+select_database: 'sqlite'
 
 # 管理员列表
 admin:
-  - '1000'
+  - '1334850101'
 
 # mysql数据库配置
 mysql:
   host: 'localhost'
   port: '3306'
-  user: ''
-  password: ''
-  database: ''
+  user: 'xwbot'
+  password: '123456'
+  database: 'xwbot'
+
+# postgresql数据库配置
+postgresql:
+  host: 'localhost'
+  port: '5432'
+  user: 'xwbot'
+  password: '123456'
+  database: 'xwbot'
+
+# sqlite数据库配置
+sqlite:
+  database: 'xwbot.db3'

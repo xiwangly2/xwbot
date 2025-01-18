@@ -4,7 +4,7 @@ from colorama import Fore, Style
 # 导入自己写的模块
 from internal.config import config
 from internal.chat_thesaurus import chat_thesaurus
-from internal.database.mysql_handler import Database
+from internal.database.database import Database
 
 
 # 输出红色错误消息的函数
@@ -123,7 +123,7 @@ async def while_msg(ws):
 
             if config['write_log']:
                 # 日志写入数据库
-                Database().chat_logs(messages)
+                Database().db_handler.chat_logs(messages)
 
             # 查找词库获取回答
             text = await chat_thesaurus(messages, ws)

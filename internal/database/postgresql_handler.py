@@ -2,21 +2,24 @@ import hashlib
 import json
 import traceback
 from datetime import datetime
-from dbutils.pooled_db import PooledDB
-import pymysql
-from pymysql.converters import escape_string
-# 导入自己写的模块
+import psycopg2
+from psycopg2 import pool
+from psycopg2.extras import RealDictCursor
+# Import your own module
 from internal.config import config
 
-class MySQLDatabase:
+
+class PostgreSQLDatabase:
     def __init__(self):
-        # 创建数据库连接池
+        # Create a connection pool
         try:
-            self.pool = PooledDB(
-                creator=pymysql,  # 使用 PyMySQL 作为数据库连接库
-                maxconnections=10,  # 设置最大连接数
-                host=config['mysql']['host'], user=config['mysql']['user'],
-                                      password=config['mysql']['password'], database=config['mysql']['database'] # 将配置参数传递给连接池
+            self.pool = pool.SimpleConnectionPool(
+                1, 10,  # min and max connections
+                user=config['postgresql']['user'],
+                password=config['postgresql']['password'],
+                host=config['postgresql']['host'],
+                port=config['postgresql']['port'],
+                database=config['postgresql']['database']
             )
         except Exception:
             print("Could not create database connection pool")
@@ -25,53 +28,59 @@ class MySQLDatabase:
 
     def chat_logs(self, messages=None):
         try:
-            conn = self.pool.connection()  # 从连接池获取连接
+            conn = self.pool.getconn()
             cursor = conn.cursor()
 
             messages = json.dumps(messages, ensure_ascii=False)
-            messages = escape_string(messages)
 
-            # 插入 SQL 记录
+            # Insert SQL record
             date = datetime.now()
             cursor.execute(
-                f"INSERT INTO `logs` (`id`, `json`, `time`) VALUES (null, '{messages}', '{date}')")
+                "INSERT INTO logs (id, json, time) VALUES (DEFAULT, %s, %s)",
+                (messages, date)
+            )
 
-            conn.commit()  # 提交事务
+            conn.commit()  # Commit transaction
             cursor.close()
-            conn.close()  # 将连接放回连接池
+            self.pool.putconn(conn)  # Return connection to pool
         except Exception:
             if config['debug']:
                 traceback.print_exc()
 
     def bot_switch(self, group_id='0', switch=None):
         try:
-            conn = self.pool.connection()  # 从连接池获取连接
-            cursor = conn.cursor()
+            conn = self.pool.getconn()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
 
             if switch is not None:
-                # 插入 SQL 记录
+                # Insert SQL record
                 date = datetime.now()
                 cursor.execute(
-                    f"REPLACE INTO `switch` (`group_id`, `switch`, `time`) VALUES ('{group_id}', '{switch}', '{date}')")
+                    "INSERT INTO switch (group_id, switch, time) VALUES (%s, %s, %s) ON CONFLICT (group_id) DO UPDATE SET switch = EXCLUDED.switch, time = EXCLUDED.time",
+                    (group_id, switch, date)
+                )
             else:
                 cursor.execute(
-                    f"SELECT * FROM `switch` WHERE `group_id` = '{group_id}'")
+                    "SELECT * FROM switch WHERE group_id = %s",
+                    (group_id,)
+                )
                 return cursor.fetchall()
 
-            conn.commit()  # 提交事务
+            conn.commit()  # Commit transaction
             cursor.close()
-            conn.close()  # 将连接放回连接池
+            self.pool.putconn(conn)  # Return connection to pool
         except Exception:
             if config['debug']:
                 traceback.print_exc()
 
     def image_exists(self, sha256_hash, md5_hash):
         try:
-            conn = self.pool.connection()
+            conn = self.pool.getconn()
             cursor = conn.cursor()
 
             cursor.execute(
-                f"SELECT `id` FROM `pic` WHERE `sha256` = '{sha256_hash}' OR `md5` = '{md5_hash}'"
+                "SELECT id FROM pic WHERE sha256 = %s OR md5 = %s",
+                (sha256_hash, md5_hash)
             )
 
             result = cursor.fetchone()
@@ -83,82 +92,85 @@ class MySQLDatabase:
 
     def save_image(self, name, image_data):
         try:
-            # 计算图片的SHA-256和MD5哈希值
+            # Calculate SHA-256 and MD5 hashes of the image
             sha256_hash = hashlib.sha256(image_data).hexdigest()
             md5_hash = hashlib.md5(image_data).hexdigest()
 
-            # 先检查图片是否已存在
+            # Check if the image already exists
             if self.image_exists(sha256_hash, md5_hash):
                 return "Image already exists in the database."
             else:
-                conn = self.pool.connection()
+                conn = self.pool.getconn()
                 cursor = conn.cursor()
 
-                # 插入图片信息到数据库
+                # Insert image information into the database
                 cursor.execute(
-                    f"INSERT INTO `pic` (`name`, `bin`, `sha256`, `md5`) VALUES ('{name}', %s, '{sha256_hash}', '{md5_hash}')",
-                    (image_data,)
+                    "INSERT INTO pic (name, bin, sha256, md5) VALUES (%s, %s, %s, %s)",
+                    (name, psycopg2.Binary(image_data), sha256_hash, md5_hash)
                 )
 
             conn.commit()
             cursor.close()
-            conn.close()
+            self.pool.putconn(conn)
         except Exception:
             if config['debug']:
                 traceback.print_exc()
 
     def rename_image(self, old_name, new_name):
         try:
-            conn = self.pool.connection()
+            conn = self.pool.getconn()
             cursor = conn.cursor()
 
             cursor.execute(
-                f"UPDATE `pic` SET `name` = '{new_name}' WHERE `name` = {old_name}"
+                "UPDATE pic SET name = %s WHERE name = %s",
+                (new_name, old_name)
             )
 
             conn.commit()
             cursor.close()
-            conn.close()
+            self.pool.putconn(conn)
         except Exception:
             if config['debug']:
                 traceback.print_exc()
 
     def delete_image(self, name):
         try:
-            conn = self.pool.connection()
+            conn = self.pool.getconn()
             cursor = conn.cursor()
 
             cursor.execute(
-                f"DELETE FROM `pic` WHERE `name` = {name}"
+                "DELETE FROM pic WHERE name = %s",
+                (name,)
             )
 
             conn.commit()
             cursor.close()
-            conn.close()
+            self.pool.putconn(conn)
         except Exception:
             if config['debug']:
                 traceback.print_exc()
 
     def query_image(self, name):
         try:
-            conn = self.pool.connection()
-            cursor = conn.cursor()
+            conn = self.pool.getconn()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
 
             cursor.execute(
-                f"SELECT `id`, `name`, `bin` FROM `pic` WHERE `name` = {name}"
+                "SELECT id, name, bin FROM pic WHERE name = %s",
+                (name,)
             )
 
             result = cursor.fetchone()
             if result:
                 image_info = {
-                    "id": result[0],
-                    "name": result[1],
-                    "bin": result[2]
+                    "id": result['id'],
+                    "name": result['name'],
+                    "bin": result['bin']
                 }
                 return json.dumps(image_info, ensure_ascii=False)
 
             cursor.close()
-            conn.close()
+            self.pool.putconn(conn)
         except Exception:
             if config['debug']:
                 traceback.print_exc()

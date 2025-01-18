@@ -8,7 +8,7 @@ from sqlite3 import Error
 from internal.config import config
 
 
-class Database:
+class SQLiteDatabase:
     def __init__(self):
         # 创建数据库连接
         try:

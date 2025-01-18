@@ -10,3 +10,5 @@ __pycache__
 *.backup
 #虚拟环境
 venv/*
+#数据库
+xwbot.db3

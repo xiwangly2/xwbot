@@ -2,7 +2,7 @@ import asyncio
 import html
 import re
 
-from internal.database.mysql_handler import Database
+from internal.database.database import Database
 from internal.config import *
 from internal.functions import *
 

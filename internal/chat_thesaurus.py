@@ -7,7 +7,7 @@ import requests
 # 导入自己写的模块
 from internal.config import config
 from internal.functions import *
-from internal.database.mysql_handler import Database
+from internal.database.database import Database
 from internal.pic import pic
 
 

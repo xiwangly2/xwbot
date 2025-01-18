@@ -4,10 +4,12 @@ import traceback
 
 from pymongo import MongoClient
 
+# 导入自己写的模块
+from internal.config import config
 
-class Database:
-    def __init__(self, config):
-        self.config = config
+
+class MongoDatabase:
+    def __init__(self):
         try:
             # 建立与MongoDB的连接
             self.client = MongoClient(
