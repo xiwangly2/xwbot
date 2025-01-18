@@ -3,7 +3,7 @@ import asyncio
 import aiohttp
 
 # 导入自己写的模块
-from internal.format_output import clear_terminal, print_error, print_green
+from internal.format_output import clear_terminal, print_error, print_green, print_info
 from internal.functions import get_login_info
 from internal.chat_thesaurus import while_msg
 from internal.config import config
@@ -23,7 +23,7 @@ async def run_bot():
                 traceback.print_exc()
             print_error("Creating websocket connection.")
             return
-        print_green("WebSocket connection established successfully.")
+        print_info("WebSocket connection established successfully.")
         await get_login_info(ws)
         await while_msg(ws)
 
