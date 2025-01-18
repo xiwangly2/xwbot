@@ -1,4 +1,4 @@
-FROM python:3.11.4-bullseye AS builder
+FROM python:3.13.1-bookworm AS base
 
 ENV TZ Asia/Shanghai
 
