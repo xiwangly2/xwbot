@@ -1,13 +1,12 @@
-import asyncio
 import html
 import re
 
 import aiohttp
 import requests
 
+from internal.database.database import Database
 # 导入自己写的模块
 from internal.functions import *
-from internal.database.database import Database
 from internal.pic import pic
 
 
@@ -219,15 +218,3 @@ async def chat_thesaurus(messages, ws=None):
         else:
             text = None
         return text
-
-
-async def main():
-    # 测试
-    messages = "这是一条消息"
-
-    text = await chat_thesaurus(messages)
-    print(text)
-
-
-if __name__ == '__main__':
-    asyncio.run(main())
