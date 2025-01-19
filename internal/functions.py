@@ -88,9 +88,9 @@ async def get_msg(ws, message_id):
 
 
 # 获取合并转发消息
-async def get_forward_msg(ws, id):
+async def get_forward_msg(ws, _id):
     params = {
-        'id': id
+        'id': _id
     }
     return await send_api_request(ws, 'get_forward_msg', params)
 
