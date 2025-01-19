@@ -8,7 +8,7 @@ import requests
 from internal.database.database import Database
 from internal.format_output import clear_terminal, print_error
 # 导入自己写的模块
-from internal.functions import send_msg, get_forward_msg
+from internal.functions import send_msg, get_forward_msg, send_like
 from internal.config import config
 from internal.pic import pic
 
@@ -194,6 +194,12 @@ async def chat_thesaurus(messages, ws=None):
             text = {
                 'auto_escape': False,
                 'text_list': ['已发送:', arg[1]]
+            }
+        elif arg[0] == '/like':
+            await send_like(ws, messages['user_id'], 3)
+            text = {
+                'auto_escape': False,
+                'text_list': ['已赞']
             }
         elif re.match(r'^\<\?xml', message, re.DOTALL) and is_admin:
             text = message
