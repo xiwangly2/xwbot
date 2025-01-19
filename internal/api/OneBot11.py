@@ -1,5 +1,5 @@
 # 导入自己写的模块
-from internal.functions import send_api_request
+from internal.api.functions import send_api_request
 
 
 # 发送私聊消息
