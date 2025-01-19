@@ -70,16 +70,6 @@ async def send_msg(ws, message_type, user_id=None, group_id=None, message='', au
     return await send_api_request(ws, 'send_msg', params, suffix)
 
 
-# 发送消息（自己写的）
-async def send_message(ws, messages, text, auto_escape=False):
-    if messages['message_type'] == 'private':
-        # 处理私聊消息
-        return await send_private_msg(ws, messages['user_id'], text, auto_escape, async_call=True)
-    elif messages['message_type'] == 'group':
-        # 处理群聊消息
-        return await send_group_msg(ws, messages['group_id'], text, auto_escape, async_call=True)
-
-
 # 撤回消息
 async def delete_msg(ws, message_id, async_call=False):
     params = {
