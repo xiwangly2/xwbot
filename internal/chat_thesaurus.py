@@ -269,17 +269,17 @@ async def while_msg(ws):
                 continue
             if isinstance(text, str):
                 await send_msg(ws, messages['message_type'], user_id=messages.get('user_id'),
-                               group_id=messages.get('group_id'), message=text, auto_escape=False)
+                               group_id=messages.get('group_id'), message=text, auto_escape=False, async_call=True)
             elif 'text_list' in text:
                 # auto_escape 控制自动格式化消息，这里默认否，即消息不处理CQ码等格式
                 text.setdefault('auto_escape', False)
                 for message in text['text_list']:
                     await send_msg(ws, messages['message_type'], user_id=messages.get('user_id'),
-                                   group_id=messages.get('group_id'), message=message, auto_escape=text['auto_escape'])
+                                   group_id=messages.get('group_id'), message=message, auto_escape=text['auto_escape'], async_call=True)
             else:
                 for message in text:
                     await send_msg(ws, messages['message_type'], user_id=messages.get('user_id'),
-                                   group_id=messages.get('group_id'), message=message, auto_escape=False)
+                                   group_id=messages.get('group_id'), message=message, auto_escape=False, async_call=True)
         except Exception:
             if config['debug']:
                 import traceback
