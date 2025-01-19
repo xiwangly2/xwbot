@@ -8,7 +8,7 @@ import requests
 from internal.database.database import Database
 from internal.format_output import clear_terminal, print_error
 # 导入自己写的模块
-from internal.functions import send_msg, get_forward_msg
+from internal.functions import send_message, get_forward_msg
 from internal.config import config
 from internal.pic import pic
 
@@ -268,15 +268,15 @@ async def while_msg(ws):
             if text is None:
                 continue
             if isinstance(text, str):
-                await send_msg(ws, messages, text, False)
+                await send_message(ws, messages, text, False)
             elif 'text_list' in text:
                 # auto_escape 控制自动格式化消息，这里默认否，即消息不处理CQ码等格式
                 text.setdefault('auto_escape', False)
                 for message in text['text_list']:
-                    await send_msg(ws, messages, message, text['auto_escape'])
+                    await send_message(ws, messages, message, text['auto_escape'])
             else:
                 for message in text:
-                    await send_msg(ws, messages, message, False)
+                    await send_message(ws, messages, message, False)
         except Exception:
             if config['debug']:
                 import traceback
