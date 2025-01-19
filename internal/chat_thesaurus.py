@@ -8,7 +8,7 @@ import requests
 from internal.database.database import Database
 from internal.format_output import clear_terminal, print_error
 # 导入自己写的模块
-from internal.functions import send_msg, get_forward_msg, send_like, delete_msg
+from internal.api.OneBot11 import send_msg, get_forward_msg, send_like, delete_msg
 from internal.config import config
 from internal.pic import pic
 
