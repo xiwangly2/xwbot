@@ -8,7 +8,7 @@ import requests
 from internal.database.database import Database
 from internal.format_output import clear_terminal, print_error
 # 导入自己写的模块
-from internal.functions import send_msg, get_forward_msg, send_like
+from internal.functions import send_msg, get_forward_msg, send_like, delete_msg
 from internal.config import config
 from internal.pic import pic
 
@@ -80,7 +80,6 @@ async def chat_thesaurus(messages, ws=None):
             response = requests.get(api_url)
             img_url = response.json()['imgurl']
             text = {
-                'auto_escape': False,
                 'text_list': ['您要的loli:', f"[CQ:image,file={img_url}]"]
             }
         elif arg[0] == '/math':
@@ -132,6 +131,35 @@ async def chat_thesaurus(messages, ws=None):
                 text = str(uuid.uuid5(arg[1], arg[2]))
             else:
                 text = "参数错误"
+        elif arg[0] == '/send' and is_admin:
+            text = {
+                'text_list': ['已发送:', arg[1]]
+            }
+        elif arg[0] == '/like':
+            await send_like(ws, messages['user_id'], 3)
+            text = {
+                'text_list': ['已赞']
+            }
+        elif re.search(r'^\[CQ:reply,id=(\d+)\].*?/del$', message) and is_admin:
+            match = re.search(r'\[CQ:reply,id=(\d+)\]', message)
+            if match:
+                message_id = match.group(1)
+                await delete_msg(ws, message_id)
+                text = {
+                    'text_list': ['已撤回']
+                }
+            else:
+                text = "未找到消息ID"
+        elif config['debug']:
+            if arg[0] == '/test':
+                # 测试
+                # text = ['第一条消息', '第二条消息']
+                text = {
+                    'auto_escape': True,
+                    'text_list': ['第一条消息', '第二条消息', f"原始消息:{message}"]
+                }
+            else:
+                text = None
         elif arg[0] == '/菜单':
             text = '********************\n\
 /菜单 或 /help -帮助\n\
@@ -190,17 +218,6 @@ async def chat_thesaurus(messages, ws=None):
                 'auto_escape': True,
                 'text_list': ['解析CQ码:', message]
             }
-        elif arg[0] == '/send' and is_admin:
-            text = {
-                'auto_escape': False,
-                'text_list': ['已发送:', arg[1]]
-            }
-        elif arg[0] == '/like':
-            await send_like(ws, messages['user_id'], 3)
-            text = {
-                'auto_escape': False,
-                'text_list': ['已赞']
-            }
         elif re.match(r'^\<\?xml', message, re.DOTALL) and is_admin:
             text = message
             json_data = {
@@ -218,16 +235,6 @@ async def chat_thesaurus(messages, ws=None):
                 'data': {'data': text}
             }
             text = ['发送JSON:', json_data]
-        elif config['debug']:
-            if arg[0] == '/test':
-                # 测试
-                # text = ['第一条消息', '第二条消息']
-                text = {
-                    'auto_escape': True,
-                    'text_list': ['第一条消息', '第二条消息', messages]
-                }
-            else:
-                text = None
         else:
             text = None
         return text
