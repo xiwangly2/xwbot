@@ -1,5 +1,4 @@
 import json
-
 # 导入自己写的模块
 from internal.config import config
 
@@ -14,35 +13,46 @@ def build_api_data(action, params):
 
 
 # 发送 API 请求
-async def send_api_request(ws, action, params):
-    data = build_api_data(action, params)
+async def send_api_request(ws, action, params, suffix=''):
+    data = build_api_data(action + suffix, params)
     await ws.send_str(data)
     response = await ws.receive()
     return json.loads(response.data)
 
 
 # 发送私聊消息
-async def send_private_msg(ws, user_id, message, auto_escape=False):
+async def send_private_msg(ws, user_id, message, auto_escape=False, async_call=False, rate_limited=False):
     params = {
         'user_id': user_id,
         'message': message,
         'auto_escape': auto_escape
     }
-    return await send_api_request(ws, 'send_private_msg', params)
+    suffix = ''
+    if async_call:
+        suffix = '_async'
+    elif rate_limited:
+        suffix = '_rate_limited'
+    return await send_api_request(ws, 'send_private_msg', params, suffix)
 
 
 # 发送群消息
-async def send_group_msg(ws, group_id, message, auto_escape=False):
+async def send_group_msg(ws, group_id, message, auto_escape=False, async_call=False, rate_limited=False):
     params = {
         'group_id': group_id,
         'message': message,
         'auto_escape': auto_escape
     }
-    return await send_api_request(ws, 'send_group_msg', params)
+    suffix = ''
+    if async_call:
+        suffix = '_async'
+    elif rate_limited:
+        suffix = '_rate_limited'
+    return await send_api_request(ws, 'send_group_msg', params, suffix)
 
 
 # 发送消息
-async def send_msg(ws, message_type, user_id=None, group_id=None, message='', auto_escape=False):
+async def send_msg(ws, message_type, user_id=None, group_id=None, message='', auto_escape=False, async_call=False,
+                   rate_limited=False):
     params = {
         'message_type': message_type,
         'message': message,
@@ -52,15 +62,21 @@ async def send_msg(ws, message_type, user_id=None, group_id=None, message='', au
         params['user_id'] = user_id
     elif message_type == 'group':
         params['group_id'] = group_id
-    return await send_api_request(ws, 'send_msg', params)
+    suffix = ''
+    if async_call:
+        suffix = '_async'
+    elif rate_limited:
+        suffix = '_rate_limited'
+    return await send_api_request(ws, 'send_msg', params, suffix)
 
 
 # 撤回消息
-async def delete_msg(ws, message_id):
+async def delete_msg(ws, message_id, async_call=False):
     params = {
         'message_id': message_id
     }
-    return await send_api_request(ws, 'delete_msg', params)
+    suffix = '_async' if async_call else ''
+    return await send_api_request(ws, 'delete_msg', params, suffix)
 
 
 # 获取消息
@@ -80,36 +96,40 @@ async def get_forward_msg(ws, id):
 
 
 # 发送好友赞
-async def send_like(ws, user_id, times=1):
+async def send_like(ws, user_id, times=1, async_call=False):
     params = {
         'user_id': user_id,
         'times': times
     }
-    return await send_api_request(ws, 'send_like', params)
+    suffix = '_async' if async_call else ''
+    return await send_api_request(ws, 'send_like', params, suffix)
 
 
 # 群组踢人
-async def set_group_kick(ws, group_id, user_id, reject_add_request=False):
+async def set_group_kick(ws, group_id, user_id, reject_add_request=False, async_call=False):
     params = {
         'group_id': group_id,
         'user_id': user_id,
         'reject_add_request': reject_add_request
     }
-    return await send_api_request(ws, 'set_group_kick', params)
+    suffix = '_async' if async_call else ''
+    return await send_api_request(ws, 'set_group_kick', params, suffix)
 
 
 # 群组单人禁言
-async def set_group_ban(ws, group_id, user_id, duration=30 * 60):
+async def set_group_ban(ws, group_id, user_id, duration=30 * 60, async_call=False):
     params = {
         'group_id': group_id,
         'user_id': user_id,
         'duration': duration
     }
-    return await send_api_request(ws, 'set_group_ban', params)
+    suffix = '_async' if async_call else ''
+    return await send_api_request(ws, 'set_group_ban', params, suffix)
 
 
 # 群组匿名用户禁言
-async def set_group_anonymous_ban(ws, group_id, anonymous=None, anonymous_flag=None, duration=30 * 60):
+async def set_group_anonymous_ban(ws, group_id, anonymous=None, anonymous_flag=None, duration=30 * 60,
+                                  async_call=False):
     params = {
         'group_id': group_id,
         'duration': duration
@@ -118,95 +138,105 @@ async def set_group_anonymous_ban(ws, group_id, anonymous=None, anonymous_flag=N
         params['anonymous'] = anonymous
     if anonymous_flag:
         params['anonymous_flag'] = anonymous_flag
-    return await send_api_request(ws, 'set_group_anonymous_ban', params)
+    suffix = '_async' if async_call else ''
+    return await send_api_request(ws, 'set_group_anonymous_ban', params, suffix)
 
 
 # 群组全员禁言
-async def set_group_whole_ban(ws, group_id, enable=True):
+async def set_group_whole_ban(ws, group_id, enable=True, async_call=False):
     params = {
         'group_id': group_id,
         'enable': enable
     }
-    return await send_api_request(ws, 'set_group_whole_ban', params)
+    suffix = '_async' if async_call else ''
+    return await send_api_request(ws, 'set_group_whole_ban', params, suffix)
 
 
 # 群组设置管理员
-async def set_group_admin(ws, group_id, user_id, enable=True):
+async def set_group_admin(ws, group_id, user_id, enable=True, async_call=False):
     params = {
         'group_id': group_id,
         'user_id': user_id,
         'enable': enable
     }
-    return await send_api_request(ws, 'set_group_admin', params)
+    suffix = '_async' if async_call else ''
+    return await send_api_request(ws, 'set_group_admin', params, suffix)
 
 
 # 群组匿名
-async def set_group_anonymous(ws, group_id, enable=True):
+async def set_group_anonymous(ws, group_id, enable=True, async_call=False):
     params = {
         'group_id': group_id,
         'enable': enable
     }
-    return await send_api_request(ws, 'set_group_anonymous', params)
+    suffix = '_async' if async_call else ''
+    return await send_api_request(ws, 'set_group_anonymous', params, suffix)
 
 
 # 设置群名片（群备注）
-async def set_group_card(ws, group_id, user_id, card=''):
+async def set_group_card(ws, group_id, user_id, card='', async_call=False):
     params = {
         'group_id': group_id,
         'user_id': user_id,
         'card': card
     }
-    return await send_api_request(ws, 'set_group_card', params)
+    suffix = '_async' if async_call else ''
+    return await send_api_request(ws, 'set_group_card', params, suffix)
 
 
 # 设置群名
-async def set_group_name(ws, group_id, group_name):
+async def set_group_name(ws, group_id, group_name, async_call=False):
     params = {
         'group_id': group_id,
         'group_name': group_name
     }
-    return await send_api_request(ws, 'set_group_name', params)
+    suffix = '_async' if async_call else ''
+    return await send_api_request(ws, 'set_group_name', params, suffix)
 
 
 # 退出群组
-async def set_group_leave(ws, group_id, is_dismiss=False):
+async def set_group_leave(ws, group_id, is_dismiss=False, async_call=False):
     params = {
         'group_id': group_id,
         'is_dismiss': is_dismiss
     }
-    return await send_api_request(ws, 'set_group_leave', params)
+    suffix = '_async' if async_call else ''
+    return await send_api_request(ws, 'set_group_leave', params, suffix)
 
 
 # 设置群组专属头衔
-async def set_group_special_title(ws, group_id, user_id, special_title='', duration=-1):
+async def set_group_special_title(ws, group_id, user_id, special_title='', duration=-1, async_call=False):
     params = {
         'group_id': group_id,
         'user_id': user_id,
         'special_title': special_title,
         'duration': duration
     }
-    return await send_api_request(ws, 'set_group_special_title', params)
+    suffix = '_async' if async_call else ''
+    return await send_api_request(ws, 'set_group_special_title', params, suffix)
 
 
 # 处理加好友请求
-async def set_friend_add_request(ws, flag, approve=True, remark=''):
+async def set_friend_add_request(ws, flag, approve=True, remark='', async_call=False):
     params = {
         'flag': flag,
         'approve': approve,
         'remark': remark
     }
-    return await send_api_request(ws, 'set_friend_add_request', params)
+    suffix = '_async' if async_call else ''
+    return await send_api_request(ws, 'set_friend_add_request', params, suffix)
 
 
 # 处理加群请求／邀请
-async def set_group_add_request(ws, flag, sub_type, approve=True, reason=''):
+async def set_group_add_request(ws, flag, sub_type, approve=True, reason='', async_call=False):
     params = {
         'flag': flag,
         'sub_type': sub_type,
         'approve': approve,
         'reason': reason
     }
-    return await send_api_request(ws, 'set_group_add_request', params)
+    suffix = '_async' if async_call else ''
+    return await send_api_request(ws, 'set_group_add_request', params, suffix)
 
 
 # 获取登录号信息
@@ -338,3 +368,13 @@ async def set_restart(ws, delay=0):
 # 清理缓存
 async def clean_cache(ws):
     return await send_api_request(ws, 'clean_cache', {})
+
+
+# 隐藏 API
+# 对事件执行快速操作#
+async def handle_quick_operation(ws, context, operation):
+    params = {
+        'context': context,
+        'operation': operation
+    }
+    return await send_api_request(ws, '.handle_quick_operation', params)
