@@ -35,13 +35,14 @@ debug: false # 这个配置默认为 false，如果您需要调试，请设置�
 write_log: true # 这个配置默认为 true，如果您不需要写日志，请设置为 false，写日志会将所有对话记录写入到数据库中
 # 遇到错误自动重启
 auto_reconnect: false # 这个配置默认为 false，如果 Docker 容器的重启策略是 自动重启，建议保持设置为 false，这对于独立部署的程序且没有守护进程的情况下，可以保证程序不会因为错误而终止
-# 选择数据库
-select_database: 'postgresql' # 目前支持的选项有 mysql、postgresql、sqlite，mongo，您可以根据自己的需求选择
 
 # 管理员列表
 admin: # 这些列表决定了谁可以使用管理员命令和一些危险的命令，填写 QQ 号
   - '1000'
   - '1001'
+
+sql: # 数据库配置，多选一
+  type: "sqlite3" # 数据库类型，目前支持 sqlite3，mysql，postgres
 ```
 
 我们建议将支持 OneBot 的机器人框架、数据库和本程序运行在同一个内网环境中，以减少网络延迟

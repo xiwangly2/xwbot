@@ -1,3 +1,6 @@
+import json
+from datetime import datetime
+
 from sqlalchemy.orm import sessionmaker
 from internal.database.init import engine
 from internal.database.models.logs import Logs
@@ -21,18 +24,20 @@ def set_bot_switch(group_id: str, switch_value: str):
         if switch:
             switch.switch = switch_value
         else:
-            switch = Switch(group_id=group_id, switch=switch_value,
-                            time="current_time")  # Replace "current_time" with actual time
+            date = datetime.now()
+            switch = Switch(group_id=group_id, switch=switch_value, time=date)
             session.add(switch)
         session.commit()
     finally:
         session.close()
 
 
-def set_chat_logs(json: str):
+def set_chat_logs(messages: str):
     session = SessionLocal()
     try:
-        log = Logs(json=json, time="current_time")  # Replace "current_time" with actual time
+        messages = json.dumps(messages, ensure_ascii=False)
+        date = datetime.now()
+        log = Logs(json=messages, time=date)
         session.add(log)
         session.commit()
     finally:
