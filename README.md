@@ -17,7 +17,7 @@
 docker run -itd -v $PWD/xwbot/config/config.yml:/app/config/config.yml --name=xwbot --pull=always --restart=always ghcr.io/xiwangly2/xwbot:main
 ```
 
-`ghcr.io/xiwangly2/xwbot:main` 镜像同时安装了多种数据库的依赖支持，如果您想要更精简,可以自行构建镜像
+`ghcr.io/xiwangly2/xwbot:main` 镜像同时安装了多种数据库的依赖支持，如果您想要更精简，可以自行构建镜像
 
 ## 配置说明
 配置文件在`config/config_example.yml`，您需要将`config/config_example.yml`复制到`config/config.yml`并编辑其中的设置
