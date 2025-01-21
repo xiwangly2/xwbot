@@ -12,7 +12,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 def get_bot_switch(group_id: str):
     session = SessionLocal()
     try:
-        return session.query(Switch).filter(Switch.group_id == group_id).first()
+        return session.query(Switch).filter(Switch.group_id == str(group_id)).first()
     finally:
         session.close()
 
@@ -20,7 +20,7 @@ def get_bot_switch(group_id: str):
 def set_bot_switch(group_id: str, switch_value: str):
     session = SessionLocal()
     try:
-        switch = session.query(Switch).filter(Switch.group_id == group_id).first()
+        switch = session.query(Switch).filter(Switch.group_id == str(group_id)).first()
         if switch:
             switch.switch = switch_value
         else:

@@ -48,25 +48,21 @@ async def chat_thesaurus(messages, ws=None):
     try:
         # 查询开关
         bot_switch = get_bot_switch(messages['group_id'])
-        if bot_switch is None:
+        if bot_switch is None or bot_switch.switch == '0':
             if arg[0] == '/on' and is_admin:
                 set_bot_switch(messages['group_id'], '1')
-            text = "Bot started successfully."
+                text = "Bot started successfully."
+            else:
+                text = None
             return text
     except NameError:
-        bot_switch = False
+        bot_switch = None
         if config['debug']:
             import traceback
             traceback.print_exc()
         pass
-    if bot_switch is False:
-        if arg[0] == '/on' and is_admin:
-            set_bot_switch(messages['group_id'], '1')
-            text = "Bot started successfully."
-        else:
-            text = None
-        return text
-    elif bot_switch is True:
+
+    if bot_switch and bot_switch.switch == '1':
         if arg[0] == '/on' and is_admin:
             text = "Bot is running."
         elif arg[0] == '/off' and is_admin:
