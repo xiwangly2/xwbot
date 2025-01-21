@@ -12,7 +12,7 @@
 
 运行以下命令，即可拉取镜像并运行，您需要拷贝 `config/config_example.yml` 到 `$PWD/xwbot/config/config.yml` 并修改配置
 
-数据库可能需要额外安装并配置，初始化数据库请查看 `sql` 文件夹
+数据库可能需要额外安装并配置，如果您使用的是 sqlite3，那么无需额外配置
 ```shell
 docker run -itd -v $PWD/xwbot/config/config.yml:/app/config/config.yml --name=xwbot --pull=always --restart=always ghcr.io/xiwangly2/xwbot:main
 ```
@@ -44,6 +44,7 @@ admin: # 这些列表决定了谁可以使用管理员命令和一些危险的�
 sql: # 数据库配置，多选一
   type: "sqlite3" # 数据库类型，目前支持 sqlite3，mysql，postgres
 ```
+以上配置文件可能会有所变动而没来得及更新，以最新提交的示例配置文件为准
 
 我们建议将支持 OneBot 的机器人框架、数据库和本程序运行在同一个内网环境中，以减少网络延迟
 
