@@ -5,7 +5,7 @@ import re
 import aiohttp
 import requests
 
-from internal.database.database import Database
+from internal.database.db_handler import get_bot_switch, set_bot_switch, set_chat_logs
 from internal.format_output import clear_terminal, print_error
 # 导入自己写的模块
 from internal.api.OneBot11 import send_msg, get_forward_msg, send_like, delete_msg
@@ -47,10 +47,10 @@ async def chat_thesaurus(messages, ws=None):
     is_admin = f_is_admin(messages['user_id'])
     try:
         # 查询开关
-        bot_switch = Database().db_handler.bot_switch(messages['group_id'])
+        bot_switch = get_bot_switch(messages['group_id'])
         if bot_switch is None:
             if arg[0] == '/on' and is_admin:
-                Database().db_handler.bot_switch(messages['group_id'], 1)
+                set_bot_switch(messages['group_id'], '1')
             text = "Bot started successfully."
             return text
     except NameError:
@@ -61,7 +61,7 @@ async def chat_thesaurus(messages, ws=None):
         pass
     if bot_switch is False:
         if arg[0] == '/on' and is_admin:
-            Database().db_handler.bot_switch(messages['group_id'], 1)
+            set_bot_switch(messages['group_id'], '1')
             text = "Bot started successfully."
         else:
             text = None
@@ -70,7 +70,7 @@ async def chat_thesaurus(messages, ws=None):
         if arg[0] == '/on' and is_admin:
             text = "Bot is running."
         elif arg[0] == '/off' and is_admin:
-            Database().db_handler.bot_switch(messages['group_id'], 0)
+            set_bot_switch(messages['group_id'], '0')
             text = "Bot is off."
         elif arg[0] == '/help':
             text = "这是一个帮助列表<Response [200]>"
@@ -274,7 +274,7 @@ async def while_msg(ws):
 
             if config['write_log']:
                 # 日志写入数据库
-                Database().db_handler.chat_logs(messages)
+                set_chat_logs(messages)
 
             # 查找词库获取回答
             text = await chat_thesaurus(messages, ws)

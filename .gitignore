@@ -13,6 +13,7 @@ venv/*
 .venv
 # 数据库
 xwbot.db3
+data.db
 # 测试文件
 test/*
 .idea/dataSources.xml
