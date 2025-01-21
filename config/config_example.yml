@@ -1,5 +1,5 @@
-# 使用正向websocket
-# go-cqhttp 服务器地址
+# 使用正向 Websocket
+# OneBot WebSocket 服务器地址
 host: 'localhost'
 # OneBot WebSocket 服务器端口
 port: '6700'
