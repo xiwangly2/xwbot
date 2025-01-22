@@ -9,7 +9,8 @@ import requests
 from internal.api.MessageBuilder import MessageBuilder
 from internal.database.db_handler import get_bot_switch, set_bot_switch, set_chat_logs
 from internal.format_output import clear_terminal, print_error
-from internal.api.OneBot11 import send_msg, get_forward_msg, send_like, delete_msg
+from internal.api.OneBot11 import send_msg, get_forward_msg, send_like, delete_msg, set_group_special_title, \
+    get_group_member_info
 from internal.config import config
 from internal.pic import pic
 
@@ -152,9 +153,7 @@ async def chat_thesaurus(messages, ws=None):
             else:
                 return "参数错误"
         elif arg[0] == '/send' and is_admin:
-            return {
-                'text_list': ['已发送:', arg[1]]
-            }
+            return ['已发送:', re.sub(r'/send ', '', message)]
         elif arg[0] == '/like':
             await send_like(ws, messages['user_id'], 20)
             return {
@@ -174,8 +173,14 @@ async def chat_thesaurus(messages, ws=None):
             # 测试
             # return ['第一条消息', '第二条消息']
             return {
-                'auto_escape': True,
-                'text_list': ['第一条消息', '第二条消息', f"原始消息:{message}"]
+                'auto_escape': False,
+                'text_list': ['第一条消息', '第二条消息',
+                              {
+                                  "type": "face",
+                                  "data": {
+                                      "id": "123"
+                                  }
+                              }]
             }
         elif arg[0] == '/菜单':
             return '********************\n\
@@ -197,6 +202,35 @@ async def chat_thesaurus(messages, ws=None):
 /gold user(object) number - 增加金币(admin)\n\
 注：[]表示参数可选，部分命令可通过[]的数字简化选择\n\
 ********************'
+        elif arg[0] == '/set_group_special_title':
+            role = await get_group_member_info(ws, messages['group_id'], messages['self_id'])
+            role = role['data']['role']
+            if role == 'owner':
+                if arg_len == 3 and is_admin:
+                    # /set_group_special_title user_id title
+                    await set_group_special_title(ws, messages['group_id'], arg[1], arg[2])
+                    text = "为用户[CQ:at,qq=" + arg[1] + "]设置了群组专属头衔：" + arg[2]
+                elif arg_len == 3 and re.search(r'\[CQ:at,qq=(\d+)]', arg[1]) and is_admin:
+                    # /set_group_special_title @user title
+                    await set_group_special_title(ws, messages['group_id'], re.sub(r'\[CQ:at,qq=(\d+)]', r'\1', arg[1]),
+                                                  arg[2])
+                    text = "为用户[CQ:at,qq=" + re.sub(r'\[CQ:at,qq=(\d+)]', r'\1', arg[1]) + "]设置了群组专属头衔：" + arg[2]
+                elif arg_len == 3:
+                    text = '不是管理员只能为自己设置群组专属头衔'
+                elif arg_len == 2 and is_admin:
+                    # /set_group_special_title title
+                    await set_group_special_title(ws, messages['group_id'], messages['user_id'], arg[1])
+                    text = "为管理员自己设置了群组专属头衔：" + arg[1]
+                elif arg_len == 2:
+                    # /set_group_special_title title
+                    # TODO: 为自己设置群组专属头衔 可能需要敏感词过滤
+                    await set_group_special_title(ws, messages['group_id'], messages['user_id'], arg[1])
+                    text = "为自己设置了群组专属头衔：" + arg[1]
+                else:
+                    text = '/set_group_special_title [user_id]* title'
+            else:
+                text = '不是群主无法设置群组专属头衔'
+            return text
         elif re.search(r'\[CQ:xml,data=', message):
             text = html.unescape(message)
             text = re.sub(r'\[CQ:xml,data=(.+)]', r'\1', text)
@@ -282,7 +316,7 @@ async def while_msg(ws):
                 await send_msg(ws, messages['message_type'], user_id=messages.get('user_id'),
                                group_id=messages.get('group_id'), message=text, auto_escape=False, async_call=True)
             elif 'text_list' in text:
-                # auto_escape 控制自动格式化消息，这里默认否，即消息不处理CQ码等格式
+                # auto_escape 消息内容是否作为纯文本发送（即不解析 CQ 码），只在 message 字段是字符串时有效
                 text.setdefault('auto_escape', None)
                 for message in text['text_list']:
                     await send_msg(ws, messages['message_type'], user_id=messages.get('user_id'),
