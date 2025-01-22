@@ -132,7 +132,7 @@ async def chat_thesaurus(messages, ws=None):
                 'text_list': ['已发送:', arg[1]]
             }
         elif arg[0] == '/like':
-            await send_like(ws, messages['user_id'], 3)
+            await send_like(ws, messages['user_id'], 20)
             text = {
                 'text_list': ['已赞']
             }
