@@ -5,9 +5,10 @@ import re
 import aiohttp
 import requests
 
+# 导入自己写的模块
+from internal.api.MessageBuilder import MessageBuilder
 from internal.database.db_handler import get_bot_switch, set_bot_switch, set_chat_logs
 from internal.format_output import clear_terminal, print_error
-# 导入自己写的模块
 from internal.api.OneBot11 import send_msg, get_forward_msg, send_like, delete_msg
 from internal.config import config
 from internal.pic import pic
@@ -231,22 +232,9 @@ async def chat_thesaurus(messages, ws=None):
                 'text_list': ['解析CQ码:', message]
             }
         elif re.match(r'^\<\?xml', message, re.DOTALL) and is_admin:
-            text = message
-            json_data = {
-                'type': 'xml',
-                'data': {'data': text}
-            }
-            return {
-                'auto_escape': True,
-                'text_list': ['发送XML:', json_data]
-            }
+            return ['发送XML:', MessageBuilder.xml(message)]
         elif re.match(r'^\{', message, re.DOTALL) and is_admin:
-            text = message
-            json_data = {
-                'type': 'json',
-                'data': {'data': text}
-            }
-            return ['发送JSON:', json_data]
+            return ['发送JSON:', MessageBuilder.json(message)]
         else:
             return None
 
@@ -299,11 +287,13 @@ async def while_msg(ws):
                 text.setdefault('auto_escape', None)
                 for message in text['text_list']:
                     await send_msg(ws, messages['message_type'], user_id=messages.get('user_id'),
-                                   group_id=messages.get('group_id'), message=message, auto_escape=text['auto_escape'], async_call=True)
+                                   group_id=messages.get('group_id'), message=message, auto_escape=text['auto_escape'],
+                                   async_call=True)
             else:
                 for message in text:
                     await send_msg(ws, messages['message_type'], user_id=messages.get('user_id'),
-                                   group_id=messages.get('group_id'), message=message, auto_escape=False, async_call=True)
+                                   group_id=messages.get('group_id'), message=message, auto_escape=False,
+                                   async_call=True)
         except Exception:
             if config['debug']:
                 import traceback
