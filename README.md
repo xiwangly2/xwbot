@@ -51,7 +51,11 @@ sql: # 数据库配置，多选一
 ### 更新/卸载
 
 移除容器和镜像
-`docker stop xwbot || docker rm xwbot || docker rmi ghcr.io/xiwangly2/xwbot:main`
+```shell
+docker stop xwbot
+docker rm xwbot
+docker rmi ghcr.io/xiwangly2/xwbot:main
+```
 
 要更新的话就再执行一遍安装步骤
 
