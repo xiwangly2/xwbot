@@ -15,19 +15,30 @@ from internal.pic import pic
 
 
 def parse_message(messages):
-    if messages['message']:
-        message = html.unescape(messages['message'])
-        arg = re.split(r'\s', message)
-        arg_len = len(arg)
-    else:
+    try:
+        if messages['message']:
+            message = html.unescape(messages['message'])
+            arg = re.split(r'\s', message)
+            arg_len = len(arg)
+        else:
+            message = ''
+            arg = ['']
+            arg_len = 0
+
+        if arg_len > 1:
+            match = re.search(re.escape(arg[0]) + r' (.*)', message)
+            arg_all = match.group(1) if match else None
+        else:
+            arg_all = None
+    except Exception:
+        if config['debug']:
+            import traceback
+            traceback.print_exc()
+        else:
+            pass
         message = ''
         arg = ['']
         arg_len = 0
-
-    if arg_len > 1:
-        match = re.match(arg[0] + ' (.*)', message)
-        arg_all = match.group(1) if match else None
-    else:
         arg_all = None
 
     return message, arg, arg_len, arg_all
@@ -126,10 +137,6 @@ async def chat_thesaurus(messages, ws=None):
                     }
                     response = requests.post(url="https://api.xiwangly.com/math.php", data=data, headers=header)
                     return f"{response}"
-        elif re.match(r'_http(s)://', message):
-            return "这是一个???"
-        elif re.match(r'\d{1,3}', message):
-            return "选项"
         elif arg[0] == '/calc':
             import math
             try:
@@ -153,8 +160,8 @@ async def chat_thesaurus(messages, ws=None):
             return {
                 'text_list': ['已赞']
             }
-        elif re.search(r'^\[CQ:reply,id=(\d+)\].*?/del$', message) and is_admin:
-            match = re.search(r'\[CQ:reply,id=(\d+)\]', message)
+        elif re.search(r'^\[CQ:reply,id=(\d+)].*?/del$', message) and is_admin:
+            match = re.search(r'\[CQ:reply,id=(\d+)]', message)
             if match:
                 message_id = match.group(1)
                 await delete_msg(ws, message_id)
@@ -163,16 +170,13 @@ async def chat_thesaurus(messages, ws=None):
                 }
             else:
                 return "未找到消息ID"
-        elif config['debug']:
-            if arg[0] == '/test':
-                # 测试
-                # return ['第一条消息', '第二条消息']
-                return {
-                    'auto_escape': True,
-                    'text_list': ['第一条消息', '第二条消息', f"原始消息:{message}"]
-                }
-            else:
-                return None
+        elif arg[0] == '/test':
+            # 测试
+            # return ['第一条消息', '第二条消息']
+            return {
+                'auto_escape': True,
+                'text_list': ['第一条消息', '第二条消息', f"原始消息:{message}"]
+            }
         elif arg[0] == '/菜单':
             return '********************\n\
 /菜单 或 /help -帮助\n\
@@ -193,48 +197,43 @@ async def chat_thesaurus(messages, ws=None):
 /gold user(object) number - 增加金币(admin)\n\
 注：[]表示参数可选，部分命令可通过[]的数字简化选择\n\
 ********************'
-        elif re.match(r'\[CQ\:xml,data\=', message):
+        elif re.search(r'\[CQ:xml,data=', message):
             text = html.unescape(message)
-            text = re.sub(r'\[CQ:xml,data=(.+)\]', r'\1', text)
+            text = re.sub(r'\[CQ:xml,data=(.+)]', r'\1', text)
             return {
                 'auto_escape': True,
                 'text_list': ['解析XML:', text]
             }
-        elif re.match(r'\[CQ:json,data=(.+)\]', message):
+        elif re.search(r'\[CQ:json,data=(.+)]', message):
             text = html.unescape(message)
-            text = re.sub(r'\[CQ:json,data=(.+)\]', r'\1', text)
+            text = re.sub(r'\[CQ:json,data=(.+)]', r'\1', text)
             return {
                 'auto_escape': True,
                 'text_list': ['解析JSON:', text]
             }
-        elif re.match(r'\[CQ\:forward,id\=', message):
-            message_id = re.sub(r'\[CQ:forward,id=(.+)\]', r'\1', message)
+        elif re.search(r'\[CQ:forward,id=', message):
+            message_id = re.sub(r'\[CQ:forward,id=(.+)]', r'\1', message)
             text = await get_forward_msg(ws, message_id)
             return {
                 'auto_escape': True,
                 'text_list': ['解析合并转发:', text]
             }
-        elif re.match(r'^\[CQ\:at,qq=', message) or re.match(r'^\[CQ\:reply,id=', message) or re.match(
-                r'^\[CQ\:face,id=', message):
-            # 不处理at、回复、表情开头的CQ码防止刷屏
-            return None
-        elif re.match(r'\[CQ\:image.+\]', message):
-            return {
-                'auto_escape': True,
-                'text_list': ['解析图像:', message]
-            }
-        elif re.match(r'(.+)?\/(.+)?pic(.+)?', message):
+        elif re.search(r'(.+)?/(.+)?pic(.+)?', message):
             # 表情包功能
             return await pic(messages, ws)
-        elif re.match(r'\[CQ\:.+\]', message):
+        elif re.search(r'^\[CQ:at,qq=', message) or re.search(r'^\[CQ:reply,id=', message) or re.search(
+                r'^\[CQ:face,id=', message):
+            # 不处理at、回复、表情开头的CQ码防止刷屏
+            return None
+        elif re.search(r'^<\?xml', message, re.DOTALL) and is_admin:
+            return ['发送XML:', MessageBuilder.xml(message)]
+        elif re.search(r'^\{', message, re.DOTALL) and is_admin:
+            return ['发送JSON:', MessageBuilder.json(message)]
+        elif re.search(r'\[CQ:.+]', message):
             return {
                 'auto_escape': True,
                 'text_list': ['解析CQ码:', message]
             }
-        elif re.match(r'^\<\?xml', message, re.DOTALL) and is_admin:
-            return ['发送XML:', MessageBuilder.xml(message)]
-        elif re.match(r'^\{', message, re.DOTALL) and is_admin:
-            return ['发送JSON:', MessageBuilder.json(message)]
         else:
             return None
 
