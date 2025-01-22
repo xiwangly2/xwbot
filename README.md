@@ -17,6 +17,8 @@
 docker run -itd -v $PWD/xwbot/config/config.yml:/app/config/config.yml --name=xwbot --pull=always --restart=always ghcr.io/xiwangly2/xwbot:main
 ```
 
+您可能需要自行映射端口，或者使用`--network host`参数，以便让程序能够访问到 OneBot WebSocket 服务器
+
 `ghcr.io/xiwangly2/xwbot:main` 镜像同时安装了多种数据库的依赖支持，如果您想要更精简，可以自行构建镜像
 
 ## 配置说明
