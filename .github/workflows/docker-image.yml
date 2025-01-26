@@ -54,6 +54,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ghcr.io/${{ github.repository }}:latest
           platforms: ${{ matrix.platforms }}
+          # 启用实验性拷贝功能
+          allow: network.host,security.insecure
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |

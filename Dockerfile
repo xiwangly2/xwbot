@@ -23,22 +23,14 @@ RUN --mount=type=cache,target=/root/.cache/pip \
         && pip install --no-cache-dir pytest-playwright~=0.6.2; \
     fi
 
-# 第三阶段：浏览器安装（仅限支持架构）
-FROM builder as browser
-
-# 安装Playwright（x86_64/aarch64/armv7）
-RUN if [ "$TARGETARCH" = "amd64" ] || [ "$TARGETARCH" = "arm64" ] || [ "$TARGETARCH" = "arm" ]; then \
-    playwright install --with-deps chromium; \
-    fi
-
 # 最终阶段：生产镜像
 FROM base as production
 COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
-COPY --from=browser /root/.cache/ms-playwright /root/.cache/ms-playwright
 COPY . /app
 
-# 架构特定清理
-RUN if [ "$TARGETARCH" != "s390x" ]; then \
+# 安装&架构特定清理
+RUN playwright install --with-deps chromium; \
+    if [ "$TARGETARCH" != "s390x" ]; then \
     apt purge -y python3-dev gcc && \
     apt autoremove -y; \
     fi && \
