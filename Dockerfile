@@ -10,6 +10,7 @@ COPY . /app
 RUN arch=$(uname -m) && \
     if [ "$arch" = "x86_64" ] || [ "$arch" = "aarch64" ] || [ "$arch" = "amd64" ] || [ "$arch" = "arm64" ]; then \
         pip install --no-cache-dir -r requirements.txt && \
+        pip install --no-cache-dir pytest-playwright~=0.6.2 && \
         playwright install --with-deps; \
     else \
         pip install --no-cache-dir -r requirements.txt; \

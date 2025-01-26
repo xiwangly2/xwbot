@@ -99,7 +99,7 @@ async def screenshot_command(arg, arg_len):
 
         return ['已截图:', MessageBuilder.image(base64_image)]
     else:
-        return "程序在不支持的系统架构运行"
+        return f"当前功能不支持系统架构: {arch}"
 
 
 async def chat_thesaurus(messages, ws=None):
