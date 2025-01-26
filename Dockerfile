@@ -1,6 +1,6 @@
 FROM python:3.13.1-bookworm AS base
 
-ENV TZ Asia/Shanghai
+ENV TZ=Asia/Shanghai
 
 WORKDIR /app
 
