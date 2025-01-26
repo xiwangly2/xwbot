@@ -1,28 +1,47 @@
-FROM python:3.13.1-bookworm AS base
-
+# 第一阶段：基础依赖（全架构通用）
+FROM --platform=$BUILDPLATFORM python:3.13.1-bookworm as base
 ENV TZ=Asia/Shanghai
-
 WORKDIR /app
 
+# 安装跨架构基础依赖
+RUN apt update && \
+    apt install -y --no-install-recommends \
+    libpq5 \
+    $(if [ "$(uname -m)" = "s390x" ]; then echo "python3-dev gcc"; fi) \
+    && rm -rf /var/lib/apt/lists/*
+
+# 第二阶段：架构适配构建阶段
+FROM base as builder
+COPY requirements.txt .
+
+# 使用BuildKit缓存并处理架构差异
+RUN --mount=type=cache,target=/root/.cache/pip \
+    if [ "$TARGETARCH" = "s390x" ]; then \
+        grep -v "psycopg2-binary" requirements.txt | pip install --no-cache-dir -r /dev/stdin; \
+    else \
+        pip install --no-cache-dir -r requirements.txt \
+        && pip install --no-cache-dir pytest-playwright~=0.6.2; \
+    fi
+
+# 第三阶段：浏览器安装（仅限支持架构）
+FROM builder as browser
+
+# 安装Playwright（x86_64/aarch64/armv7）
+RUN if [ "$TARGETARCH" = "amd64" ] || [ "$TARGETARCH" = "arm64" ] || [ "$TARGETARCH" = "arm" ]; then \
+    playwright install --with-deps chromium; \
+    fi
+
+# 最终阶段：生产镜像
+FROM base as production
+COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
+COPY --from=browser /root/.cache/ms-playwright /root/.cache/ms-playwright
 COPY . /app
 
-# 根据架构选择性安装
-RUN arch=$(uname -m) && \
-    apt update && \
-    apt install libpq-dev -y && \
-    if [ "$arch" = "x86_64" ] || [ "$arch" = "aarch64" ]; then \
-        # 主流架构安装完整依赖
-        pip install --no-cache-dir -r requirements.txt && \
-        pip install --no-cache-dir pytest-playwright~=0.6.2 && \
-        playwright install --with-deps; \
-    else \
-        if [ "$arch" = "s390x" ]; then \
-        # 仅在 s390x 上排除 psycopg2
-        grep -v "psycopg2-binary" requirements.txt | pip install --no-cache-dir -r /dev/stdin; \
-        else \
-        # 其他架构安装部分依赖 \
-        pip install --no-cache-dir -r requirements.txt; \
-        fi; \
-    fi
+# 架构特定清理
+RUN if [ "$TARGETARCH" != "s390x" ]; then \
+    apt purge -y python3-dev gcc && \
+    apt autoremove -y; \
+    fi && \
+    rm -rf /var/lib/apt/lists/*
 
 CMD ["python", "/app/main.py"]
