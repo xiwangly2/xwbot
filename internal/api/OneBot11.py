@@ -1,4 +1,3 @@
-# 导入自己写的模块
 from internal.api.functions import send_api_request
 
 

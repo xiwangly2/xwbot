@@ -6,9 +6,7 @@ WORKDIR /app
 
 COPY . /app
 
-# 设置镜像源，可选
-RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple/
-
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    playwright install
 
 CMD ["python", "/app/main.py"]

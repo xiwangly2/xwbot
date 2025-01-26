@@ -1,7 +1,7 @@
 import os
 import yaml
-
 from internal.format_output import print_warning
+
 
 # 机器人配置信息
 if os.path.exists('config/config.yml'):

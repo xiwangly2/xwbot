@@ -1,7 +1,6 @@
 import re
-
-# 导入自己写的模块
 from internal.config import config
+
 
 messages = None
 message = None

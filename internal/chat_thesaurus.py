@@ -1,16 +1,14 @@
+import base64
 import html
 import json
 import re
-
 import aiohttp
 import requests
-
-# 导入自己写的模块
+from playwright.async_api import async_playwright
 from internal.api.MessageBuilder import MessageBuilder
 from internal.database.db_handler import get_bot_switch, set_bot_switch, set_chat_logs
 from internal.format_output import clear_terminal, print_error
-from internal.api.OneBot11 import send_msg, get_forward_msg, send_like, delete_msg, set_group_special_title, \
-    get_group_member_info
+from internal.api.OneBot11 import send_msg, get_forward_msg, send_like, delete_msg, set_group_special_title, get_group_member_info
 from internal.config import config
 from internal.pic import pic
 
@@ -75,6 +73,27 @@ async def handle_math_command(arg, arg_len):
         }
         response = requests.post(url="https://api.xiwangly.com/math.php", data=data, headers=header)
         return f"{response}"
+
+
+async def screenshot_command(arg, arg_len):
+    if arg_len == 1:
+        return "/screenshot url [full_page=False] or /prtsc url [full_page=False]"
+    elif arg_len > 3:
+        return "参数过多"
+
+    full_page = arg_len == 3
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        page = await browser.new_page()
+        await page.goto(arg[1])
+        screenshot_bytes = await page.screenshot(full_page=full_page)
+        await browser.close()
+
+    base64_image = base64.b64encode(screenshot_bytes).decode()
+    base64_image = f"base64://{base64_image}"
+
+    return ['已截图:', MessageBuilder.image(base64_image)]
 
 
 async def chat_thesaurus(messages, ws=None):
@@ -152,6 +171,12 @@ async def chat_thesaurus(messages, ws=None):
                 return str(uuid.uuid5(arg[1], arg[2]))
             else:
                 return "参数错误"
+        elif arg[0] == '/screenshot' or arg[0] == '/prtsc':
+            if is_admin:
+                return await screenshot_command(arg, arg_len)
+            else:
+                # 非管理员应该限制此功能，以防止浏览黄色网站导致的风险
+                return "没有权限"
         elif arg[0] == '/send' and is_admin:
             return ['已发送:', re.sub(r'/send ', '', message)]
         elif arg[0] == '/like':

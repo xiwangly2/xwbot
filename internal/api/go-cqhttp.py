@@ -1,9 +1,7 @@
-# 导入自己写的模块
 from internal.api.functions import send_api_request
 
 
 # TODO: 还没写完
-
 # 设置登录号资料
 async def set_qq_profile(ws, profile):
     params = {

@@ -1,8 +1,5 @@
 import asyncio
-
 import aiohttp
-
-# 导入自己写的模块
 from internal.format_output import clear_terminal, print_error, print_info
 from internal.api.OneBot11 import get_login_info
 from internal.chat_thesaurus import while_msg
