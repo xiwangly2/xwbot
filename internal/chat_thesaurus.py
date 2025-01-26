@@ -4,13 +4,11 @@ import json
 import re
 import aiohttp
 import requests
-from playwright.async_api import async_playwright
 from internal.api.MessageBuilder import MessageBuilder
 from internal.database.db_handler import get_bot_switch, set_bot_switch, set_chat_logs
 from internal.format_output import clear_terminal, print_error
 from internal.api.OneBot11 import send_msg, get_forward_msg, send_like, delete_msg, set_group_special_title, get_group_member_info
 from internal.config import config
-from internal.pic import pic
 
 
 def parse_message(messages):
@@ -76,24 +74,32 @@ async def handle_math_command(arg, arg_len):
 
 
 async def screenshot_command(arg, arg_len):
-    if arg_len == 1:
-        return "/screenshot url [full_page=False] or /prtsc url [full_page=False]"
-    elif arg_len > 3:
-        return "参数过多"
+    import platform
+    # 获取系统架构
+    arch = platform.machine()
+    # 判断是否为 x86_64 或 aarch64
+    if arch in ['x86_64', 'aarch64', 'AMD64', 'arm64']:
+        from playwright.async_api import async_playwright
+        if arg_len == 1:
+            return "/screenshot url [full_page=False] or /prtsc url [full_page=False]"
+        elif arg_len > 3:
+            return "参数过多"
 
-    full_page = arg_len == 3
+        full_page = arg_len == 3
 
-    async with async_playwright() as p:
-        browser = await p.chromium.launch()
-        page = await browser.new_page()
-        await page.goto(arg[1])
-        screenshot_bytes = await page.screenshot(full_page=full_page)
-        await browser.close()
+        async with async_playwright() as p:
+            browser = await p.chromium.launch()
+            page = await browser.new_page()
+            await page.goto(arg[1])
+            screenshot_bytes = await page.screenshot(full_page=full_page)
+            await browser.close()
 
-    base64_image = base64.b64encode(screenshot_bytes).decode()
-    base64_image = f"base64://{base64_image}"
+        base64_image = base64.b64encode(screenshot_bytes).decode()
+        base64_image = f"base64://{base64_image}"
 
-    return ['已截图:', MessageBuilder.image(base64_image)]
+        return ['已截图:', MessageBuilder.image(base64_image)]
+    else:
+        return "程序在不支持的系统架构运行"
 
 
 async def chat_thesaurus(messages, ws=None):
@@ -278,6 +284,7 @@ async def chat_thesaurus(messages, ws=None):
                 'text_list': ['解析合并转发:', text]
             }
         elif re.search(r'(.+)?/(.+)?pic(.+)?', message):
+            from internal.pic import pic
             # 表情包功能
             return await pic(messages, ws)
         elif re.search(r'^\[CQ:at,qq=', message) or re.search(r'^\[CQ:reply,id=', message) or re.search(
