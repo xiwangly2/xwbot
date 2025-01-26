@@ -79,6 +79,7 @@ async def screenshot_command(arg, arg_len):
     arch = platform.machine()
     # 判断是否为 x86_64 或 aarch64
     if arch in ['x86_64', 'aarch64', 'AMD64', 'arm64']:
+        # noinspection PyPackageRequirements
         from playwright.async_api import async_playwright
         if arg_len == 1:
             return "/screenshot url [full_page=False] or /prtsc url [full_page=False]"
