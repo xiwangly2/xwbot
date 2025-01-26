@@ -123,12 +123,15 @@ async def chat_thesaurus(messages, ws=None):
             traceback.print_exc()
         pass
 
-    if bot_switch and bot_switch.switch == '1':
+    if bot_switch.switch == '1':
         if arg[0] == '/on' and is_admin:
             return "Bot is running."
         elif arg[0] == '/off' and is_admin:
             set_bot_switch(messages['group_id'], '0')
             return "Bot is off."
+        elif arg[0] == '/CQ' and is_admin:
+            set_bot_switch(messages['group_id'], 'CQ')
+            return "Bot transitioned from Running state to CQ state."
         elif arg[0] == '/help':
             return "这是一个帮助列表<Response [200]>"
         elif arg[0] == '/来份萝莉' or arg[0] == '/loli':
@@ -215,25 +218,11 @@ async def chat_thesaurus(messages, ws=None):
                               }]
             }
         elif arg[0] == '/菜单':
-            return '********************\n\
-/菜单 或 /help -帮助\n\
-[1]/ping ip\n\
-/复读 [format] msg(admin)\n\
-/start - 开始\n\
-[2]/来份萝莉 或 /loli - 发送随机二次元图片\n\
-[3]/uuid - 生成UUID\n\
-/dwz url - 生成短网址\n\
-/m msg - 智能聊天（实验）\n\
-/yiyan - 随机一言\n\
-/info - 信息\n\
-/dic question answer - 增加dic(admin)\n\
-/math [x] [y] [z] method - 数学计算\n\
-/xuid id - 查询xbox xuid\n\
-/fileupload url [name] - 文件上传(admin)\n\
-/签到 或 /check_in - 每日签到\n\
-/gold user(object) number - 增加金币(admin)\n\
-注：[]表示参数可选，部分命令可通过[]的数字简化选择\n\
-********************'
+            return """
+            /on 开启机器人
+            /off 关闭机器人
+            ……
+            """
         elif arg[0] == '/set_group_special_title':
             role = await get_group_member_info(ws, messages['group_id'], messages['self_id'])
             role = role['data']['role']
@@ -263,6 +252,15 @@ async def chat_thesaurus(messages, ws=None):
             else:
                 text = '不是群主无法设置群组专属头衔'
             return text
+        else:
+            return None
+    elif bot_switch.switch == 'CQ':
+        if arg[0] == '/on' and is_admin:
+            set_bot_switch(messages['group_id'], '1')
+            return "Bot transitioned from CQ state to Running state."
+        elif arg[0] == '/off' and is_admin:
+            set_bot_switch(messages['group_id'], '0')
+            return "Bot is off."
         elif re.search(r'\[CQ:xml,data=', message):
             text = html.unescape(message)
             text = re.sub(r'\[CQ:xml,data=(.+)]', r'\1', text)
@@ -303,6 +301,8 @@ async def chat_thesaurus(messages, ws=None):
             }
         else:
             return None
+    else:
+        return None
 
 
 async def while_msg(ws):
