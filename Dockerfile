@@ -16,8 +16,12 @@ RUN arch=$(uname -m) && \
         pip install --no-cache-dir pytest-playwright~=0.6.2 && \
         playwright install --with-deps; \
     else \
+        if [ "$arch" = "s390x" ]; then \
+        # 仅在 s390x 上排除 psycopg2
+        grep -v "psycopg2-binary" requirements.txt | pip install --no-cache-dir -r /dev/stdin; \
+        else \
         # 其他架构安装部分依赖 \
         pip install --no-cache-dir -r requirements.txt; \
-    fi
+        fi; \
 
 CMD ["python", "/app/main.py"]
