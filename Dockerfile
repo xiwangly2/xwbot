@@ -23,5 +23,6 @@ RUN arch=$(uname -m) && \
         # 其他架构安装部分依赖 \
         pip install --no-cache-dir -r requirements.txt; \
         fi; \
+    fi
 
 CMD ["python", "/app/main.py"]
