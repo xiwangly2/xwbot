@@ -1,13 +1,12 @@
-name: Build And Push Docker Image
+name: Build And Push Multi-Arch Docker Image
 
 on:
   push:
     branches:
       - 'main'
       - 'dev'
-    # Sequence of patterns matched against refs/tags
     tags:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+      - 'v*' # 推送符合 v* 模式的标签时触发
 
   workflow_dispatch:
 
@@ -16,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # 定义平台与标签的合法映射
+        # 定义平台与标签后缀的映射
         include:
           - platform: linux/amd64
             tag_suffix: linux-amd64
@@ -34,6 +33,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Determine main tag
+        id: main-tag
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            main_tag="${GITHUB_REF#refs/tags/}"
+          else
+            main_tag="latest"
+          fi
+          echo "main_tag=$main_tag" >> $GITHUB_OUTPUT
+
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
         with:
@@ -50,9 +59,9 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v3
         with:
+          driver: docker-container
           driver-opts: |
             network=host
-            image=moby/buildkit:master
 
       - name: Build and push (per-arch)
         uses: docker/build-push-action@v6
@@ -60,7 +69,7 @@ jobs:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ghcr.io/${{ github.repository }}:${{ matrix.tag_suffix }}
+            ghcr.io/${{ github.repository }}:${{ steps.main-tag.outputs.main_tag }}-${{ matrix.tag_suffix }}
           platforms: ${{ matrix.platform }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -78,11 +87,21 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Determine main tag
+        id: main-tag
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            main_tag="${GITHUB_REF#refs/tags/}"
+          else
+            main_tag="latest"
+          fi
+          echo "main_tag=$main_tag" >> $GITHUB_OUTPUT
+
       - name: Create multi-arch manifest
         env:
           REPO: ghcr.io/${{ github.repository }}
+          MAIN_TAG: ${{ steps.main-tag.outputs.main_tag }}
         run: |
-          # 自动生成架构列表
           platforms=(
             "linux/amd64:linux-amd64"
             "linux/arm64:linux-arm64"
@@ -92,21 +111,28 @@ jobs:
             "linux/arm/v5:linux-armv5"
           )
 
-          # 拉取所有架构镜像并创建 Manifest
-          manifest_cmd="docker manifest create $REPO:latest"
+          # 创建 Manifest 列表
+          manifest_cmd="docker manifest create $REPO:$MAIN_TAG"
           for pair in "${platforms[@]}"; do
-            IFS=':' read -r platform tag <<< "$pair"
-            full_tag="$REPO:$tag"
+            IFS=':' read -r platform tag_suffix <<< "$pair"
+            full_tag="$REPO:$MAIN_TAG-$tag_suffix"
 
             # 检查镜像是否存在
             if docker manifest inspect $full_tag >/dev/null 2>&1; then
-              echo "✅ Adding $platform ($tag)"
-              manifest_cmd+=" $full_tag"
+              echo "✅ Adding $platform ($tag_suffix)"
+              manifest_cmd+=" --amend $full_tag"
             else
-              echo "⚠️  Skipping missing $platform ($tag)"
+              echo "⚠️  Skipping missing $platform ($tag_suffix)"
             fi
           done
 
-          # 执行 Manifest 创建
+          # 执行创建并推送 Manifest
           eval $manifest_cmd
-          docker manifest push $REPO:latest
+          docker manifest push $REPO:$MAIN_TAG
+
+          # 如果是 latest 标签，同时更新 latest 的日期标签
+          if [[ "$MAIN_TAG" == "latest" ]]; then
+            date_tag=$(date -u +"%Y%m%d")
+            docker manifest create $REPO:$date_tag $REPO:$MAIN_TAG
+            docker manifest push $REPO:$date_tag
+          fi
