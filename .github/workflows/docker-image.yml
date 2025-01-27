@@ -5,30 +5,24 @@ on:
     branches:
       - 'main'
       - 'dev'
-    # Sequence of patterns matched against refs/tags
     tags:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
-
+      - 'v*'
   workflow_dispatch:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     permissions:
       packages: write
       contents: read
 
+    strategy:
+      matrix:
+        platform: [linux/amd64, linux/arm64, linux/arm/v7, linux/ppc64le, linux/s390x, linux/arm/v5]
+      fail-fast: false
+
     steps:
       - uses: actions/checkout@v4
-
-      # # 如果有 dockerhub 账户，可以在github的secrets中配置下面两个，然后取消下面注释的这几行，并在meta步骤的images增加一行 ${{ github.repository }}
-      # - name: Login to DockerHub
-      #   uses: docker/login-action@v3
-      #   with:
-      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
-      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -37,32 +31,85 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: |
-            ghcr.io/${{ github.repository }}
+          images: ghcr.io/${{ github.repository }}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
+          flavor: |
+            latest=true
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
+      - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
+          driver-opts: |
+            image=moby/buildkit:master
+            network=host
+
+      - name: Cache layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ matrix.platform }}-${{ hashFiles('**/Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-${{ matrix.platform }}-
 
       - name: Build and push
-        id: docker_build
         uses: docker/build-push-action@v6
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x,linux/arm/v5
+          tags: ${{ steps.meta.outputs.tags }}-${{ matrix.platform }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+          platforms: ${{ matrix.platform }}
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+
+  manifest:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+          flavor: |
+            latest=true
+
+      - name: Create manifest
+        run: |
+          # 生成基础命令
+          manifest_cmd="docker buildx imagetools create"
+
+          # 添加所有平台标签
+          for platform in linux/amd64 linux/arm64 linux/arm/v7 linux/ppc64le linux/s390x linux/arm/v5; do
+            tag="${{ steps.meta.outputs.tags }}-$platform"
+            manifest_cmd+=" --tag ${{ steps.meta.outputs.tags }} $tag"
+          done
+
+          # 执行命令
+          eval $manifest_cmd
