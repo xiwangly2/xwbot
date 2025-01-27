@@ -21,7 +21,6 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     else \
         pip install --no-cache-dir -r requirements.txt \
         && pip install --no-cache-dir pytest-playwright~=0.6.2; \
-        && playwright install --with-deps chromium; \
     fi
 
 # 最终阶段：生产镜像
@@ -32,6 +31,7 @@ COPY . /app
 # 安装&架构特定清理
 RUN playwright install --with-deps chromium; \
     if [ "$TARGETARCH" != "s390x" ]; then \
+    playwright install; \
     apt purge -y python3-dev gcc && \
     apt autoremove -y; \
     fi && \
