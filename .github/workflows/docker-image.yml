@@ -47,16 +47,44 @@ jobs:
             network=host
             image=moby/buildkit:master
 
-      - name: Build and push (parallel)
+      - name: Build and push (per-arch)
         uses: docker/build-push-action@v6
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ghcr.io/${{ github.repository }}:latest
+          tags: ghcr.io/${{ github.repository }}:${{ matrix.platforms }}
           platforms: ${{ matrix.platforms }}
-          # 启用实验性拷贝功能
-          allow: network.host,security.insecure
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             BUILDKIT_INLINE_CACHE=1
+
+  merge-manifest:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create multi-arch manifest
+        run: |
+          docker pull ghcr.io/${{ github.repository }}:linux-amd64
+          docker pull ghcr.io/${{ github.repository }}:linux-arm64
+          docker pull ghcr.io/${{ github.repository }}:linux-arm-v7
+          docker pull ghcr.io/${{ github.repository }}:linux-ppc64le
+          docker pull ghcr.io/${{ github.repository }}:linux-s390x
+          docker pull ghcr.io/${{ github.repository }}:linux-arm-v5
+
+          docker manifest create ghcr.io/${{ github.repository }}:latest \
+            ghcr.io/${{ github.repository }}:linux-amd64 \
+            ghcr.io/${{ github.repository }}:linux-arm64 \
+            ghcr.io/${{ github.repository }}:linux-arm-v7 \
+            ghcr.io/${{ github.repository }}:linux-ppc64le \
+            ghcr.io/${{ github.repository }}:linux-s390x \
+            ghcr.io/${{ github.repository }}:linux-arm-v5
+
+          docker manifest push ghcr.io/${{ github.repository }}:latest
