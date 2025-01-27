@@ -79,30 +79,34 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create multi-arch manifest
+        env:
+          REPO: ghcr.io/${{ github.repository }}
         run: |
-          # 定义标签映射关系
-          declare -A arch_map=(
-            ["linux/amd64"]="linux-amd64"
-            ["linux/arm64"]="linux-arm64"
-            ["linux/arm/v7"]="linux-armv7"
-            ["linux/ppc64le"]="linux-ppc64le"
-            ["linux/s390x"]="linux-s390x"
-            ["linux/arm/v5"]="linux-armv5"
+          # 自动生成架构列表
+          platforms=(
+            "linux/amd64:linux-amd64"
+            "linux/arm64:linux-arm64"
+            "linux/arm/v7:linux-armv7"
+            "linux/ppc64le:linux-ppc64le"
+            "linux/s390x:linux-s390x"
+            "linux/arm/v5:linux-armv5"
           )
 
-          # 拉取所有架构镜像
-          for platform in "${!arch_map[@]}"; do
-            tag=${arch_map[$platform]}
-            docker pull ghcr.io/${{ github.repository }}:${tag}
+          # 拉取所有架构镜像并创建 Manifest
+          manifest_cmd="docker manifest create $REPO:latest"
+          for pair in "${platforms[@]}"; do
+            IFS=':' read -r platform tag <<< "$pair"
+            full_tag="$REPO:$tag"
+
+            # 检查镜像是否存在
+            if docker manifest inspect $full_tag >/dev/null 2>&1; then
+              echo "✅ Adding $platform ($tag)"
+              manifest_cmd+=" $full_tag"
+            else
+              echo "⚠️  Skipping missing $platform ($tag)"
+            fi
           done
 
-          # 创建 Manifest
-          docker manifest create ghcr.io/${{ github.repository }}:latest \
-            ghcr.io/${{ github.repository }}:linux-amd64 \
-            ghcr.io/${{ github.repository }}:linux-arm64 \
-            ghcr.io/${{ github.repository }}:linux-armv7 \
-            ghcr.io/${{ github.repository }}:linux-ppc64le \
-            ghcr.io/${{ github.repository }}:linux-s390x \
-            ghcr.io/${{ github.repository }}:linux-armv5
-
-          docker manifest push ghcr.io/${{ github.repository }}:latest
+          # 执行 Manifest 创建
+          eval $manifest_cmd
+          docker manifest push $REPO:latest
