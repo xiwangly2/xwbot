@@ -245,6 +245,14 @@ async def check_url_safely(ws, url):
     return await send_api_request(ws, 'check_url_safely', params)
 
 
+# 获取中文分词 ( 隐藏 API )
+async def get_word_slices(ws, content):
+    params = {
+        'content': content
+    }
+    return await send_api_request(ws, '.get_word_slices', params)
+
+
 # 对事件执行快速操作 (隐藏 API)
 async def handle_quick_operation(ws, context, operation):
     params = {

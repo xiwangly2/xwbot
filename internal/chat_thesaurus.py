@@ -8,6 +8,7 @@ from internal.api.MessageBuilder import MessageBuilder
 from internal.database.db_handler import get_bot_switch, set_bot_switch, set_chat_logs
 from internal.format_output import clear_terminal, print_error
 from internal.api.OneBot11 import send_msg, get_forward_msg, send_like, delete_msg, set_group_special_title, get_group_member_info
+from internal.api.gocqhttp import check_url_safely
 from internal.config import config
 
 
@@ -44,6 +45,19 @@ def parse_message(messages):
 # 判断QQ号是否在管理员列表里
 def f_is_admin(user_id):
     return f"{user_id}" in config['admin']
+
+
+# 判断 url 是否安全
+async def is_safe_url(ws, url):
+    result = await check_url_safely(ws, url)
+    # 响应数据
+    # 字段	类型	说明
+    # level	int	安全等级, 1: 安全 2: 未知 3: 危险
+    print(f"安全等级: {result}")
+    if result['data']['level'] == 1:
+        return True
+    else:
+        return False
 
 
 async def handle_loli_command():
@@ -184,9 +198,13 @@ async def chat_thesaurus(messages, ws=None):
         elif arg[0] == '/screenshot' or arg[0] == '/prtsc':
             if is_admin:
                 return await screenshot_command(arg, arg_len)
+            elif arg_len == 2:
+                if await is_safe_url(ws, arg[1]):
+                    return await screenshot_command(arg, arg_len)
+                else:
+                    return '链接不安全'
             else:
-                # 非管理员应该限制此功能，以防止浏览黄色网站导致的风险
-                return "没有权限"
+                return '参数错误'
         elif arg[0] == '/send' and is_admin:
             return ['已发送:', re.sub(r'/send ', '', message)]
         elif arg[0] == '/like':
@@ -199,9 +217,7 @@ async def chat_thesaurus(messages, ws=None):
             if match:
                 message_id = match.group(1)
                 await delete_msg(ws, message_id)
-                return {
-                    'text_list': ['已撤回']
-                }
+                return "已撤回"
             else:
                 return "未找到消息ID"
         elif arg[0] == '/test':
@@ -227,15 +243,15 @@ async def chat_thesaurus(messages, ws=None):
             role = await get_group_member_info(ws, messages['group_id'], messages['self_id'])
             role = role['data']['role']
             if role == 'owner':
-                if arg_len == 3 and is_admin:
-                    # /set_group_special_title user_id title
-                    await set_group_special_title(ws, messages['group_id'], arg[1], arg[2])
-                    text = "为用户[CQ:at,qq=" + arg[1] + "]设置了群组专属头衔：" + arg[2]
-                elif arg_len == 3 and re.search(r'\[CQ:at,qq=(\d+)]', arg[1]) and is_admin:
+                if arg_len == 3 and re.search(r'\[CQ:at,qq=(\d+)]', arg[1]) and is_admin:
                     # /set_group_special_title @user title
                     await set_group_special_title(ws, messages['group_id'], re.sub(r'\[CQ:at,qq=(\d+)]', r'\1', arg[1]),
                                                   arg[2])
                     text = "为用户[CQ:at,qq=" + re.sub(r'\[CQ:at,qq=(\d+)]', r'\1', arg[1]) + "]设置了群组专属头衔：" + arg[2]
+                elif arg_len == 3 and re.match(r'^\d+$', arg[1]) and is_admin:
+                    # /set_group_special_title user_id title
+                    await set_group_special_title(ws, messages['group_id'], arg[1], arg[2])
+                    text = "为用户[CQ:at,qq=" + arg[1] + "]设置了群组专属头衔：" + arg[2]
                 elif arg_len == 3:
                     text = '不是管理员只能为自己设置群组专属头衔'
                 elif arg_len == 2 and is_admin:
