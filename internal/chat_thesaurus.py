@@ -62,10 +62,16 @@ async def is_safe_url(ws, url):
 
 
 async def handle_loli_command():
-    api_url = 'https://api.xiwangly.com/random.php?return=json'
-    response = requests.get(api_url)
-    img_url = response.json()['imgurl']
-    return {'text_list': ['您要的loli:', f"[CQ:image,file={img_url}]"]}
+    try:
+        api_url = 'https://api.xiwangly.com/image-cs.php?key=123456&return=json'
+        response = requests.get(api_url)
+        img_url = response.json()['imgurl']
+        return {'text_list': ['您要的loli:', MessageBuilder.image(img_url)]}
+    except Exception:
+        if config['debug']:
+            import traceback
+            traceback.print_exc()
+        return "获取loli失败: 网络错误"
 
 
 async def handle_math_command(arg, arg_len):
@@ -81,11 +87,8 @@ async def handle_math_command(arg, arg_len):
     if arg_len >= 2:
         data['m'] = arg[1]
     async with aiohttp.ClientSession():
-        header = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
-        }
-        response = requests.post(url="https://api.xiwangly.com/math.php", data=data, headers=header)
-        return f"{response}"
+        response = requests.post(url="https://api.xiwangly.com/math.php", data=data)
+        return f"{response.text}"
 
 
 # noinspection PyPackageRequirements,PyProtectedMember
@@ -180,12 +183,7 @@ async def chat_thesaurus(messages, ws=None):
                         data['m'] = arg[1]
                     except NameError:
                         pass
-                async with aiohttp.ClientSession():
-                    header = {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
-                    }
-                    response = requests.post(url="https://api.xiwangly.com/math.php", data=data, headers=header)
-                    return f"{response}"
+                return await handle_math_command(arg, arg_len)
         elif arg[0] == '/calc':
             import math
             try:
