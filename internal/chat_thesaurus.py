@@ -53,7 +53,8 @@ async def is_safe_url(ws, url):
     # 响应数据
     # 字段	类型	说明
     # level	int	安全等级, 1: 安全 2: 未知 3: 危险
-    print(f"安全等级: {result}")
+    if config['debug']:
+        print(f"URL: {url} 安全等级: {result['data']['level']}")
     if result['data']['level'] == 1:
         return True
     else:

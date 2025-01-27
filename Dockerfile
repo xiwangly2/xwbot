@@ -29,7 +29,7 @@ COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/pytho
 COPY . /app
 
 # 安装&架构特定清理
-RUN playwright install --with-deps chromium; \
+RUN playwright install; \
     if [ "$TARGETARCH" != "s390x" ]; then \
     playwright install; \
     apt purge -y python3-dev gcc && \
