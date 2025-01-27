@@ -70,35 +70,54 @@ jobs:
             linux/arm/v5
           build-args: |
             BUILDKIT_INLINE_CACHE=1
+          attest: false  # 关键修复点：禁用证明生成
 
-  manifest:
+  verify:
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      packages: write
-      contents: read
-
     steps:
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-          flavor: |
-            latest=true
-
-      - name: Verify multi-arch image
+      - name: Check manifest
         run: |
-          docker buildx imagetools inspect ${{ steps.meta.outputs.tags }}
+          # 获取动态生成的主标签
+          main_tag="${{ needs.build.outputs.main-tag }}"
+          
+          # 清理旧验证结果
+          docker manifest rm ghcr.io/xiwangly2/xwbot:$main_tag || true
+          
+          # 重建manifest（仅包含有效架构）
+          docker buildx imagetools create \
+            --tag ghcr.io/xiwangly2/xwbot:$main_tag \
+            ghcr.io/xiwangly2/xwbot:$main_tag
+
+          # 验证架构清单
+          docker buildx imagetools inspect ghcr.io/xiwangly2/xwbot:$main_tag \
+            | grep 'Platform:' \
+            | awk '{print $2}' \
+            | sort > platforms.txt
+
+          # 预期支持的平台列表
+          expected_platforms=(
+            linux/amd64
+            linux/arm64
+            linux/arm/v7
+            linux/ppc64le
+            linux/s390x
+            linux/arm/v5
+          )
+
+          # 验证平台完整性
+          missing=0
+          for platform in "${expected_platforms[@]}"; do
+            if ! grep -qxF "$platform" platforms.txt; then
+              echo "❌ Missing platform: $platform"
+              missing=$((missing+1))
+            fi
+          done
+
+          # 如果有缺失则报错
+          if [ $missing -gt 0 ]; then
+            echo "##[error]Missing $missing platforms!"
+            exit 1
+          fi
+
+          echo "✅ All platforms verified!"
