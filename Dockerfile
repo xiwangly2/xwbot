@@ -21,6 +21,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     else \
         pip install --no-cache-dir -r requirements.txt \
         && pip install --no-cache-dir pytest-playwright~=0.6.2; \
+        && playwright install --with-deps chromium; \
     fi
 
 # 最终阶段：生产镜像
