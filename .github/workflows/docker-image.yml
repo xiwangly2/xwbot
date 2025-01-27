@@ -16,13 +16,20 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        platforms: 
-          - linux/amd64
-          - linux/arm64
-          - linux/arm/v7
-          - linux/ppc64le
-          - linux/s390x
-          - linux/arm/v5
+        # 定义平台与标签的合法映射
+        include:
+          - platform: linux/amd64
+            tag_suffix: linux-amd64
+          - platform: linux/arm64
+            tag_suffix: linux-arm64
+          - platform: linux/arm/v7
+            tag_suffix: linux-armv7
+          - platform: linux/ppc64le
+            tag_suffix: linux-ppc64le
+          - platform: linux/s390x
+            tag_suffix: linux-s390x
+          - platform: linux/arm/v5
+            tag_suffix: linux-armv5
 
     steps:
       - uses: actions/checkout@v4
@@ -53,8 +60,8 @@ jobs:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ghcr.io/${{ github.repository }}:${{ matrix.platforms | replace('/', '-') }}
-          platforms: ${{ matrix.platforms }}
+            ghcr.io/${{ github.repository }}:${{ matrix.tag_suffix }}
+          platforms: ${{ matrix.platform }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
@@ -73,19 +80,29 @@ jobs:
 
       - name: Create multi-arch manifest
         run: |
-          docker pull ghcr.io/${{ github.repository }}:linux-amd64
-          docker pull ghcr.io/${{ github.repository }}:linux-arm64
-          docker pull ghcr.io/${{ github.repository }}:linux-arm-v7
-          docker pull ghcr.io/${{ github.repository }}:linux-ppc64le
-          docker pull ghcr.io/${{ github.repository }}:linux-s390x
-          docker pull ghcr.io/${{ github.repository }}:linux-arm-v5
+          # 定义标签映射关系
+          declare -A arch_map=(
+            ["linux/amd64"]="linux-amd64"
+            ["linux/arm64"]="linux-arm64"
+            ["linux/arm/v7"]="linux-armv7"
+            ["linux/ppc64le"]="linux-ppc64le"
+            ["linux/s390x"]="linux-s390x"
+            ["linux/arm/v5"]="linux-armv5"
+          )
 
+          # 拉取所有架构镜像
+          for platform in "${!arch_map[@]}"; do
+            tag=${arch_map[$platform]}
+            docker pull ghcr.io/${{ github.repository }}:${tag}
+          done
+
+          # 创建 Manifest
           docker manifest create ghcr.io/${{ github.repository }}:latest \
             ghcr.io/${{ github.repository }}:linux-amd64 \
             ghcr.io/${{ github.repository }}:linux-arm64 \
-            ghcr.io/${{ github.repository }}:linux-arm-v7 \
+            ghcr.io/${{ github.repository }}:linux-armv7 \
             ghcr.io/${{ github.repository }}:linux-ppc64le \
             ghcr.io/${{ github.repository }}:linux-s390x \
-            ghcr.io/${{ github.repository }}:linux-arm-v5
+            ghcr.io/${{ github.repository }}:linux-armv5
 
           docker manifest push ghcr.io/${{ github.repository }}:latest
