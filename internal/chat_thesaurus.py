@@ -88,14 +88,16 @@ async def handle_math_command(arg, arg_len):
         return f"{response}"
 
 
+# noinspection PyPackageRequirements,PyProtectedMember
 async def screenshot_command(arg, arg_len):
     import platform
+    from playwright.async_api import async_playwright
+    from playwright._impl._errors import Error
+
     # 获取系统架构
     arch = platform.machine()
     # 判断是否为 x86_64 或 aarch64
     if arch in ['x86_64', 'aarch64', 'AMD64', 'arm64']:
-        # noinspection PyPackageRequirements
-        from playwright.async_api import async_playwright
         if arg_len == 1:
             return "/screenshot url [full_page=False] or /prtsc url [full_page=False]"
         elif arg_len > 3:
@@ -106,14 +108,16 @@ async def screenshot_command(arg, arg_len):
         async with async_playwright() as p:
             browser = await p.chromium.launch()
             page = await browser.new_page()
-            await page.goto(arg[1])
-            screenshot_bytes = await page.screenshot(full_page=full_page)
-            await browser.close()
-
-        base64_image = base64.b64encode(screenshot_bytes).decode()
-        base64_image = f"base64://{base64_image}"
-
-        return ['已截图:', MessageBuilder.image(base64_image)]
+            try:
+                await page.goto(arg[1])
+                screenshot_bytes = await page.screenshot(full_page=full_page)
+                base64_image = base64.b64encode(screenshot_bytes).decode()
+                base64_image = f"base64://{base64_image}"
+                return ['已截图:', MessageBuilder.image(base64_image)]
+            except Error as e:
+                return f"无法访问链接: {arg[1]} 错误: {str(e)}"
+            finally:
+                await browser.close()
     else:
         return f"当前功能不支持系统架构: {arch}"
 
