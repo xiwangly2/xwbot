@@ -52,7 +52,8 @@ jobs:
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ghcr.io/${{ github.repository }}:${{ matrix.platforms }}
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ matrix.platforms | replace('/', '-') }}
           platforms: ${{ matrix.platforms }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
