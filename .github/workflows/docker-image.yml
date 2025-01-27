@@ -15,7 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # 定义平台与标签后缀的映射
         include:
           - platform: linux/amd64
             tag_suffix: linux-amd64
@@ -45,8 +44,6 @@ jobs:
 
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -56,18 +53,15 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create builder
-        id: buildx
         uses: docker/setup-buildx-action@v3
         with:
           driver: docker-container
-          driver-opts: |
-            network=host
 
-      - name: Build and push (per-arch)
+      - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: |
             ghcr.io/${{ github.repository }}:${{ steps.main-tag.outputs.main_tag }}-${{ matrix.tag_suffix }}
           platforms: ${{ matrix.platform }}
@@ -102,35 +96,38 @@ jobs:
           REPO: ghcr.io/${{ github.repository }}
           MAIN_TAG: ${{ steps.main-tag.outputs.main_tag }}
         run: |
-          platforms=(
-            "linux/amd64:linux-amd64"
-            "linux/arm64:linux-arm64"
-            "linux/arm/v7:linux-armv7"
-            "linux/ppc64le:linux-ppc64le"
-            "linux/s390x:linux-s390x"
-            "linux/arm/v5:linux-armv5"
+          # 清理已有 manifest
+          docker manifest rm $REPO:$MAIN_TAG || true
+
+          # 架构列表
+          declare -A PLATFORM_MAP=(
+            ["linux/amd64"]="linux-amd64"
+            ["linux/arm64"]="linux-arm64"
+            ["linux/arm/v7"]="linux-armv7"
+            ["linux/ppc64le"]="linux-ppc64le"
+            ["linux/s390x"]="linux-s390x"
+            ["linux/arm/v5"]="linux-armv5"
           )
 
-          # 创建 Manifest 列表
-          manifest_cmd="docker manifest create $REPO:$MAIN_TAG"
-          for pair in "${platforms[@]}"; do
-            IFS=':' read -r platform tag_suffix <<< "$pair"
+          # 创建新的 manifest
+          for platform in "${!PLATFORM_MAP[@]}"; do
+            tag_suffix=${PLATFORM_MAP[$platform]}
             full_tag="$REPO:$MAIN_TAG-$tag_suffix"
-
-            # 检查镜像是否存在
-            if docker manifest inspect $full_tag >/dev/null 2>&1; then
+            
+            # 获取镜像 digest
+            digest=$(docker manifest inspect $full_tag | jq -r '.manifests[0].digest')
+            if [ -n "$digest" ]; then
               echo "✅ Adding $platform ($tag_suffix)"
-              manifest_cmd+=" --amend $full_tag"
+              docker manifest create $REPO:$MAIN_TAG --amend $REPO@$digest
             else
               echo "⚠️  Skipping missing $platform ($tag_suffix)"
             fi
           done
 
-          # 执行创建并推送 Manifest
-          eval $manifest_cmd
+          # 推送 manifest
           docker manifest push $REPO:$MAIN_TAG
 
-          # 如果是 latest 标签，同时更新 latest 的日期标签
+          # 创建日期标签（仅限 latest）
           if [[ "$MAIN_TAG" == "latest" ]]; then
             date_tag=$(date -u +"%Y%m%d")
             docker manifest create $REPO:$date_tag $REPO:$MAIN_TAG
