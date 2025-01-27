@@ -1,49 +1,34 @@
-name: Build And Push Multi-Arch Docker Image
+name: Build And Push Docker Image
 
 on:
   push:
     branches:
       - 'main'
       - 'dev'
+    # Sequence of patterns matched against refs/tags
     tags:
-      - 'v*' # 推送符合 v* 模式的标签时触发
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
   workflow_dispatch:
 
 jobs:
   build:
+
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - platform: linux/amd64
-            tag_suffix: linux-amd64
-          - platform: linux/arm64
-            tag_suffix: linux-arm64
-          - platform: linux/arm/v7
-            tag_suffix: linux-armv7
-          - platform: linux/ppc64le
-            tag_suffix: linux-ppc64le
-          - platform: linux/s390x
-            tag_suffix: linux-s390x
-          - platform: linux/arm/v5
-            tag_suffix: linux-armv5
+
+    permissions:
+      packages: write
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Determine main tag
-        id: main-tag
-        run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            main_tag="${GITHUB_REF#refs/tags/}"
-          else
-            main_tag="latest"
-          fi
-          echo "main_tag=$main_tag" >> $GITHUB_OUTPUT
-
-      - name: Setup QEMU
-        uses: docker/setup-qemu-action@v3
+      # # 如果有 dockerhub 账户，可以在github的secrets中配置下面两个，然后取消下面注释的这几行，并在meta步骤的images增加一行 ${{ github.repository }}
+      # - name: Login to DockerHub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -52,84 +37,32 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create builder
-        uses: docker/setup-buildx-action@v3
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          driver: docker-container
+          images: |
+            ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build and push
+        id: docker_build
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository }}:${{ steps.main-tag.outputs.main_tag }}-${{ matrix.tag_suffix }}
-          platforms: ${{ matrix.platform }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: |
-            BUILDKIT_INLINE_CACHE=1
-
-  merge-manifest:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Determine main tag
-        id: main-tag
-        run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            main_tag="${GITHUB_REF#refs/tags/}"
-          else
-            main_tag="latest"
-          fi
-          echo "main_tag=$main_tag" >> $GITHUB_OUTPUT
-
-      - name: Create multi-arch manifest
-        env:
-          REPO: ghcr.io/${{ github.repository }}
-          MAIN_TAG: ${{ steps.main-tag.outputs.main_tag }}
-        run: |
-          # 清理已有 manifest
-          docker manifest rm $REPO:$MAIN_TAG || true
-
-          # 架构列表
-          declare -A PLATFORM_MAP=(
-            ["linux/amd64"]="linux-amd64"
-            ["linux/arm64"]="linux-arm64"
-            ["linux/arm/v7"]="linux-armv7"
-            ["linux/ppc64le"]="linux-ppc64le"
-            ["linux/s390x"]="linux-s390x"
-            ["linux/arm/v5"]="linux-armv5"
-          )
-
-          # 创建新的 manifest
-          for platform in "${!PLATFORM_MAP[@]}"; do
-            tag_suffix=${PLATFORM_MAP[$platform]}
-            full_tag="$REPO:$MAIN_TAG-$tag_suffix"
-            
-            # 获取镜像 digest
-            digest=$(docker manifest inspect $full_tag | jq -r '.manifests[0].digest')
-            if [ -n "$digest" ]; then
-              echo "✅ Adding $platform ($tag_suffix)"
-              docker manifest create $REPO:$MAIN_TAG --amend $REPO@$digest
-            else
-              echo "⚠️  Skipping missing $platform ($tag_suffix)"
-            fi
-          done
-
-          # 推送 manifest
-          docker manifest push $REPO:$MAIN_TAG
-
-          # 创建日期标签（仅限 latest）
-          if [[ "$MAIN_TAG" == "latest" ]]; then
-            date_tag=$(date -u +"%Y%m%d")
-            docker manifest create $REPO:$date_tag $REPO:$MAIN_TAG
-            docker manifest push $REPO:$date_tag
-          fi
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x,linux/arm/v5
