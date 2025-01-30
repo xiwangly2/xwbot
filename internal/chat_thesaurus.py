@@ -250,13 +250,16 @@ async def chat_thesaurus(messages, ws=None):
             try:
                 # check os
                 if platform.system() == 'Windows':
-                    return subprocess.check_output(arg_all, shell=True, encoding='gbk')
+                    result = subprocess.check_output(arg_all, shell=True, encoding='gbk')
                 else:
-                    return subprocess.check_output(arg_all, shell=True).decode()
-            except subprocess.CalledProcessError:
-                if config['debug']:
-                    import traceback
-                    traceback.print_exc()
+                    result = subprocess.check_output(arg_all, shell=True).decode()
+
+                # Split result into chunks of 2048 characters
+                chunk_size = 2048
+                result_chunks = [result[i:i + chunk_size] for i in range(0, len(result), chunk_size)]
+                return result_chunks
+            except subprocess.CalledProcessError as e:
+                return str(e)
         elif arg[0] == '/set_group_special_title':
             role = await get_group_member_info(ws, messages['group_id'], messages['self_id'])
             role = role['data']['role']
