@@ -95,8 +95,6 @@ async def handle_math_command(arg, arg_len):
 # noinspection PyPackageRequirements,PyProtectedMember
 async def screenshot_command(arg, arg_len):
     import platform
-    from playwright.async_api import async_playwright
-    from playwright._impl._errors import Error
 
     # 获取系统架构
     arch = platform.machine()
@@ -108,6 +106,9 @@ async def screenshot_command(arg, arg_len):
             return "参数过多"
 
         full_page = arg_len == 3
+
+        from playwright.async_api import async_playwright
+        from playwright._impl._errors import Error
 
         async with async_playwright() as p:
             browser = await p.chromium.launch()
