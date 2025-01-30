@@ -1,6 +1,7 @@
 import base64
 import html
 import json
+import platform
 import re
 import aiohttp
 import requests
@@ -242,6 +243,20 @@ async def chat_thesaurus(messages, ws=None):
             /off 关闭机器人
             ……
             """
+        elif arg[0] == '/shell' and is_admin:
+            # Dangerous command
+            # 你应该知道你要做什么
+            import subprocess
+            try:
+                # check os
+                if platform.system() == 'Windows':
+                    return subprocess.check_output(arg_all, shell=True, encoding='gbk')
+                else:
+                    return subprocess.check_output(arg_all, shell=True).decode()
+            except subprocess.CalledProcessError:
+                if config['debug']:
+                    import traceback
+                    traceback.print_exc()
         elif arg[0] == '/set_group_special_title':
             role = await get_group_member_info(ws, messages['group_id'], messages['self_id'])
             role = role['data']['role']
