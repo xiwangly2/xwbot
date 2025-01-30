@@ -64,7 +64,7 @@ async def is_safe_url(ws, url):
 
 async def handle_loli_command():
     try:
-        api_url = 'https://api.xiwangly.com/image-cs.php?key=123456&return=json'
+        api_url = 'https://www.dmoe.cc/random.php?return=json'
         response = requests.get(api_url)
         img_url = response.json()['imgurl']
         return {'text_list': ['您要的loli:', MessageBuilder.image(img_url)]}
