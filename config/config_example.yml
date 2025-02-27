@@ -44,3 +44,9 @@ sql: # 数据库配置，多选一
     ca_path: "" # 数据库连接 ca 证书路径
     key_path: "" # 数据库连接 key 证书路径
     cert_path: "" # 数据库连接 cert 证书路径
+
+aisuite:
+  provider: 'openai'
+  api_key: 'sk-xxx'
+  model: 'openai:gemini-2.0-flash'
+  base_url: 'https://vip.bili2233.work/v1'

@@ -11,6 +11,7 @@ from internal.format_output import clear_terminal, print_error
 from internal.api.OneBot11 import send_msg, get_forward_msg, send_like, delete_msg, set_group_special_title, get_group_member_info
 from internal.api.gocqhttp import check_url_safely
 from internal.config import config
+from internal.chat_ai import chat_ai
 
 
 def parse_message(messages):
@@ -349,10 +350,9 @@ async def chat_thesaurus(messages, ws=None):
         elif arg[0] == '/off' and is_admin:
             set_bot_switch(messages['group_id'], '0')
             return "Bot is off."
-        elif arg[0] == '/AI':
-            return "AI功能开发中"
         else:
-            return None
+            result = await chat_ai(messages, message)
+            return result
     else:
         return None
 
