@@ -155,7 +155,10 @@ async def chat_thesaurus(messages, ws=None):
             return "Bot is off."
         elif arg[0] == '/CQ' and is_admin:
             set_bot_switch(messages['group_id'], 'CQ')
-            return "Bot transitioned from Running state to CQ state."
+            return "Bot transitioned to CQ state."
+        elif arg[0] == '/AI' and is_admin:
+            set_bot_switch(messages['group_id'], 'AI')
+            return "Bot transitioned to AI state."
         elif arg[0] == '/help':
             return "这是一个帮助列表<Response [200]>"
         elif arg[0] == '/来份萝莉' or arg[0] == '/loli':
@@ -295,7 +298,7 @@ async def chat_thesaurus(messages, ws=None):
     elif bot_switch.switch == 'CQ':
         if arg[0] == '/on' and is_admin:
             set_bot_switch(messages['group_id'], '1')
-            return "Bot transitioned from CQ state to Running state."
+            return "Bot transitioned to Running state."
         elif arg[0] == '/off' and is_admin:
             set_bot_switch(messages['group_id'], '0')
             return "Bot is off."
@@ -337,6 +340,17 @@ async def chat_thesaurus(messages, ws=None):
                 'auto_escape': True,
                 'text_list': ['解析CQ码:', message]
             }
+        else:
+            return None
+    elif bot_switch.switch == 'AI':
+        if arg[0] == '/on' and is_admin:
+            set_bot_switch(messages['group_id'], '1')
+            return "Bot transitioned to Running state."
+        elif arg[0] == '/off' and is_admin:
+            set_bot_switch(messages['group_id'], '0')
+            return "Bot is off."
+        elif arg[0] == '/AI':
+            return "AI功能开发中"
         else:
             return None
     else:
