@@ -12,25 +12,42 @@ async def chat_ai(messages, message):
     }})
 
     model = config["aisuite"]["model"]
+    max_memory_lines = 20  # 可配置为从config读取
 
-    with open('memory.txt', 'a+', encoding='utf-8') as f:
-        memory = f.read()
-        # {'time': '1740651631', 'user_id': '123456789', 'message': 'hello'}
-        memory = memory + f"time:\'{messages['time']}\',user_id:\'{messages['user_id']}\',message:\'{message}\'\n"
+    # 读取现有记忆
+    try:
+        with open('memory.txt', 'r', encoding='utf-8') as f:
+            memory_lines = f.readlines()
+    except FileNotFoundError:
+        memory_lines = []
 
-        # Trim the content if it exceeds the max size
-        if len(memory) > 64:
-            memory = memory[len(memory) - 64:]
+    # 添加新记录（转义单引号）
+    new_message = message.replace("'", "\\'")
+    new_line = f"time:'{messages['time']}',user_id:'{messages['user_id']}',message:'{new_message}'\n"
+    memory_lines.append(new_line)
 
-        # Write the contents of the file
-        f.write(memory)
+    # 控制记忆长度（按行截断）
+    if len(memory_lines) > max_memory_lines:
+        memory_lines = memory_lines[-max_memory_lines:]
+
+    # 控制记忆长度（按字符截断）
+    if len(''.join(memory_lines)) > 1000:
+        memory_lines = memory_lines[-1:]
+
+    # 写入记忆文件
+    with open('memory.txt', 'w', encoding='utf-8') as f:
+        f.writelines(memory_lines)
+
+    # 构造记忆上下文
+    memory_str = ''.join(memory_lines)
 
     ai_messages = [
         {"role": "system",
-         "content": '你现在处于一个QQ群聊之中,作为博学多识的可爱群员,不要故意装可爱卖萌,而是更自然,注意少使用标点符号,热心解答各种问题和高强度水群记住你说的话要尽量的简洁但具有情感,不要长篇大论,一句话不宜超过五十个字但实际回复可以超过。'},
-        {"role": "user", "content": f"memory -> {memory}"},
-        {"role": "user", "content": f"message -> {messages}"},
+         "content": '你现在处于QQ群聊中，作为博学可爱的群员，自然交流，避免刻意卖萌，回答需简洁（50字内最佳）但富有情感。'},
+        {"role": "user", "content": f"记忆上下文:\n{memory_str}"},
+        {"role": "user", "content": f"新消息:\n{messages}"},
     ]
+
     try:
         if messages['self_id'] == messages['user_id']:
             return None
