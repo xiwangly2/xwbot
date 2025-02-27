@@ -1,14 +1,16 @@
-# main.py
 import asyncio
+
 import aiohttp
-from internal.format_output import clear_terminal, print_error, print_info
+
+from internal.ai.chat_ai import start_chat_ai_process, stop_chat_ai_process  # 引入 chat_ai 进程管理函数
 from internal.api.OneBot11 import get_login_info
 from internal.chat_thesaurus import while_msg
 from internal.config import config
-from internal.ai.chat_ai import start_chat_ai_process, stop_chat_ai_process  # 引入 chat_ai 进程管理函数
+from internal.format_output import clear_terminal, print_error, print_info
+
 
 # 运行机器人
-async def run_bot(chat_ai_instance):
+async def run_bot(_chat_ai_instance):
     async with aiohttp.ClientSession() as session:
         try:
             ws = await session.ws_connect(
@@ -25,7 +27,7 @@ async def run_bot(chat_ai_instance):
             return
         print_info("WebSocket connection established successfully.")
         await get_login_info(ws)
-        await while_msg(ws, chat_ai_instance)  # 传递 ChatAIProcess 实例
+        await while_msg(ws, _chat_ai_instance)  # 传递 ChatAIProcess 实例
 
 
 if __name__ == '__main__':

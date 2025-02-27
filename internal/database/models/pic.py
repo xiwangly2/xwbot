@@ -1,6 +1,7 @@
+import uuid
+
 from sqlalchemy import Column, String, LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
-import uuid
 
 Base = declarative_base()
 

@@ -11,6 +11,7 @@ async def pic(messages, ws=None):
     arg = re.split(r'\s', message)
     # 计算参数数量
     arg_len = len(arg)
+    text = None
     if arg[0] == '/pic':
         text = "/pic 功能使用指南:\n\
 /randpic ……\n\
@@ -49,7 +50,7 @@ async def pic(messages, ws=None):
             if matches:
                 reply_id = matches[0]
                 # reply_msg = await get_msg(ws, reply_id)
-                
+
                 data = {
                     'action': 'get_msg',
                     'params': {
