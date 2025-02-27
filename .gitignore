@@ -17,3 +17,4 @@ data.db
 # 测试文件
 test/*
 .idea/dataSources.xml
+memory.txt
