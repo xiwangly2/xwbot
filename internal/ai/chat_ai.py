@@ -60,7 +60,7 @@ def _generate_response(messages, message):
         response = client.chat.completions.create(
             model=model,
             messages=ai_messages,
-            temperature=0.75
+            temperature=0.7,
         )
         return response.choices[0].message.content
     except Exception:

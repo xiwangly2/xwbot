@@ -355,7 +355,7 @@ async def chat_thesaurus(messages, ws=None, chat_ai_process=None):
             return "Bot is off."
         elif arg[0] == '/memory' and is_admin:
             if arg_len == 1:
-                return "/memory [clean|message]"
+                return "/memory [clear|message]"
             elif arg_len == 2:
                 if arg[1] == 'clear':
                     with open('memory.txt', 'w', encoding='utf-8') as f:
