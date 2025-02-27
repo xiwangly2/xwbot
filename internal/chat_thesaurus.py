@@ -353,6 +353,24 @@ async def chat_thesaurus(messages, ws=None, chat_ai_process=None):
         elif arg[0] == '/off' and is_admin:
             set_bot_switch(messages['group_id'], '0')
             return "Bot is off."
+        elif arg[0] == '/memory' and is_admin:
+            if arg_len == 1:
+                return "/memory [clean|message]"
+            elif arg_len == 2:
+                if arg[1] == 'clear':
+                    with open('memory.txt', 'w', encoding='utf-8') as f:
+                        f.write('')
+                    return "记忆已清空"
+                else:
+                    # 控制记忆长度（按字符截断）
+                    if len(arg[1]) > 1000:
+                        arg[1] = arg[1][-1:]
+                    # 写入记忆文件
+                    with open('memory.txt', 'w', encoding='utf-8') as f:
+                        f.write(f"system: {arg[1]}\n")
+                    return "已记忆"
+            else:
+                return "参数错误"
         else:
 
             # 将消息发送到 chat_ai 进程
