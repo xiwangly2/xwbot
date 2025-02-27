@@ -3,15 +3,17 @@ import html
 import json
 import platform
 import re
+
 import aiohttp
 import requests
+
 from internal.api.MessageBuilder import MessageBuilder
-from internal.database.db_handler import get_bot_switch, set_bot_switch, set_chat_logs
-from internal.format_output import clear_terminal, print_error
-from internal.api.OneBot11 import send_msg, get_forward_msg, send_like, delete_msg, set_group_special_title, get_group_member_info
+from internal.api.OneBot11 import send_msg, get_forward_msg, send_like, delete_msg, set_group_special_title, \
+    get_group_member_info
 from internal.api.gocqhttp import check_url_safely
 from internal.config import config
-from internal.ai.chat_ai import chat_ai
+from internal.database.db_handler import get_bot_switch, set_bot_switch, set_chat_logs
+from internal.format_output import clear_terminal, print_error
 
 
 def parse_message(messages):
@@ -128,7 +130,7 @@ async def screenshot_command(arg, arg_len):
         return f"当前功能不支持系统架构: {arch}"
 
 
-async def chat_thesaurus(messages, ws=None):
+async def chat_thesaurus(messages, ws=None, chat_ai_process=None):
     message, arg, arg_len, arg_all = parse_message(messages)
     is_admin = f_is_admin(messages['user_id'])
 
@@ -273,7 +275,8 @@ async def chat_thesaurus(messages, ws=None):
                     # /set_group_special_title @user title
                     await set_group_special_title(ws, messages['group_id'], re.sub(r'\[CQ:at,qq=(\d+)]', r'\1', arg[1]),
                                                   arg[2])
-                    text = "为用户[CQ:at,qq=" + re.sub(r'\[CQ:at,qq=(\d+)]', r'\1', arg[1]) + "]设置了群组专属头衔：" + arg[2]
+                    text = "为用户[CQ:at,qq=" + re.sub(r'\[CQ:at,qq=(\d+)]', r'\1', arg[1]) + "]设置了群组专属头衔：" + \
+                           arg[2]
                 elif arg_len == 3 and re.match(r'^\d+$', arg[1]) and is_admin:
                     # /set_group_special_title user_id title
                     await set_group_special_title(ws, messages['group_id'], arg[1], arg[2])
@@ -351,16 +354,22 @@ async def chat_thesaurus(messages, ws=None):
             set_bot_switch(messages['group_id'], '0')
             return "Bot is off."
         else:
-            result = await chat_ai(messages, message)
-            if result == 'no reply' or result is None:
-                return None
-            else:
-                return result.rstrip('\n')
+
+            # 将消息发送到 chat_ai 进程
+            chat_ai_process.input_queue.put((messages, messages['message']))
+
+            # 获取 chat_ai 进程的回复
+            if not chat_ai_process.output_queue.empty():
+                result = chat_ai_process.output_queue.get()
+                if result == 'no reply' or result is None:
+                    return None
+                else:
+                    return result.rstrip('\n')
     else:
         return None
 
 
-async def while_msg(ws):
+async def while_msg(ws, chat_ai_process=None):
     while True:
         try:
             # 控制跳出
@@ -397,7 +406,7 @@ async def while_msg(ws):
                 set_chat_logs(messages)
 
             # 查找词库获取回答
-            text = await chat_thesaurus(messages, ws)
+            text = await chat_thesaurus(messages, ws, chat_ai_process)
             if text is None:
                 continue
             if isinstance(text, str):
