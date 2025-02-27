@@ -26,7 +26,7 @@ async def run_bot(_chat_ai_instance):
             print_error("Creating websocket connection.")
             return
         print_info("WebSocket connection established successfully.")
-        await get_login_info(ws)
+        print_info(f"get_login_info: {await get_login_info(ws)}")
         await while_msg(ws, _chat_ai_instance)  # 传递 ChatAIProcess 实例
 
 

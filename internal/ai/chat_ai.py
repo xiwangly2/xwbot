@@ -1,8 +1,10 @@
-import multiprocessing
 import time
 from multiprocessing import Process, Queue
 
+# noinspection PyPackageRequirements
 import aisuite as ai
+
+from internal.format_output import print_info
 
 
 def _generate_response(messages, message):
@@ -78,7 +80,6 @@ class ChatAIProcess:
     def run(self):
         """独立进程的主逻辑"""
         while True:
-            print(f"chat_ai 进程正在运行，当前热度值：{self.heat_value}")
             try:
                 # 非阻塞获取消息
                 messages, message = self.input_queue.get_nowait()
@@ -86,7 +87,7 @@ class ChatAIProcess:
                 if self.heat_value > 0 or f"[CQ:at,qq={messages['self_id']}]" in message:
                     response = _generate_response(messages, message)
                     self.output_queue.put(response)
-            except multiprocessing.queues is None:
+            except Exception:
                 # 如果没有消息，跳过处理
                 pass
 
@@ -122,7 +123,7 @@ def start_chat_ai_process():
         chat_ai_instance = ChatAIProcess()  # 创建 ChatAIProcess 实例
         chat_ai_process = Process(target=chat_ai_instance.run)  # 创建 Process 对象
         chat_ai_process.start()
-        print("chat_ai 进程已启动。")
+        print_info("chat_ai 进程已启动。")
     return chat_ai_instance  # 返回 ChatAIProcess 实例
 
 
@@ -131,4 +132,4 @@ def stop_chat_ai_process():
     global chat_ai_process
     if chat_ai_process is not None:
         chat_ai_process = None
-        print("chat_ai 进程已停止。")
+        print_info("chat_ai 进程已停止。")
