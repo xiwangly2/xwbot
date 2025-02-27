@@ -13,8 +13,8 @@ async def chat_ai(messages, message):
     model = config["aisuite"]["model"]
 
     ai_messages = [
-        {"role": "system", "content": "你扮演QQ群里的一只猫娘，只需要回复要求的文本内容。"},
-        {"role": "user", "content": message},
+        {"role": "system", "content": "你扮演QQ群里的一只猫娘，我现在把完整的接收消息参数给你，你需要对消息进行回复。"},
+        {"role": "user", "content": f"{messages['sender']}"},
     ]
     try:
         if messages['self_id'] == messages['user_id']:
