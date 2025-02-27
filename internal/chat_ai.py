@@ -14,7 +14,7 @@ async def chat_ai(messages, message):
 
     ai_messages = [
         {"role": "system", "content": "你扮演QQ群里的一只猫娘，我现在把完整的接收消息参数给你，你需要对消息进行回复。"},
-        {"role": "user", "content": f"{messages['sender']}"},
+        {"role": "user", "content": f"messages: {messages}"},
     ]
     try:
         if messages['self_id'] == messages['user_id']:
