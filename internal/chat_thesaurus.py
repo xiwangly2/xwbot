@@ -11,7 +11,7 @@ from internal.format_output import clear_terminal, print_error
 from internal.api.OneBot11 import send_msg, get_forward_msg, send_like, delete_msg, set_group_special_title, get_group_member_info
 from internal.api.gocqhttp import check_url_safely
 from internal.config import config
-from internal.chat_ai import chat_ai
+from internal.ai.chat_ai import chat_ai
 
 
 def parse_message(messages):
@@ -351,8 +351,11 @@ async def chat_thesaurus(messages, ws=None):
             set_bot_switch(messages['group_id'], '0')
             return "Bot is off."
         else:
-            result = await chat_ai(messages, message)
-            return result
+            result = await chat_ai(messages)
+            if result == 'no reply' or result is None:
+                return None
+            else:
+                return result.rstrip('\n')
     else:
         return None
 
