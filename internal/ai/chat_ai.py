@@ -1,11 +1,18 @@
+import time
+
 # noinspection PyPackageRequirements
 import aisuite as ai
+
+# 全局变量存储热度值
+heat_value = 0
+last_update_time = time.time()
 
 
 async def chat_ai(messages, message):
     from internal.config import config
-    client = ai.Client()
+    global heat_value, last_update_time
 
+    client = ai.Client()
     client.configure({config["aisuite"]["provider"]: {
         "api_key": config["aisuite"]["api_key"],
         "base_url": config["aisuite"]["base_url"],
@@ -13,6 +20,18 @@ async def chat_ai(messages, message):
 
     model = config["aisuite"]["model"]
     max_memory_lines = 20  # 可配置为从config读取
+
+    # 更新热度值
+    current_time = time.time()
+    time_elapsed = current_time - last_update_time
+    last_update_time = current_time
+
+    # 热度衰减（每秒钟减少 1）
+    heat_value = max(0, int(heat_value - 1 * time_elapsed))
+
+    # 如果被@，增加热度值
+    if f"[CQ:at,qq={messages['self_id']}]" in message:
+        heat_value = min(50, heat_value + 1)  # 热度值上限为 50
 
     # 读取现有记忆
     try:
@@ -51,14 +70,20 @@ async def chat_ai(messages, message):
     try:
         if messages['self_id'] == messages['user_id']:
             return None
-        response = client.chat.completions.create(
-            model=model,
-            messages=ai_messages,
-            temperature=0.75
-        )
+
+        # 根据热度值决定是否回复
+        if heat_value > 0 or f"[CQ:at,qq={messages['self_id']}]" in message:
+            response = client.chat.completions.create(
+                model=model,
+                messages=ai_messages,
+                temperature=0.75
+            )
+            return response.choices[0].message.content
+        else:
+            print(f"热度值过低，不回复: {heat_value}")
+            return None
     except Exception:
         if config['debug']:
             import traceback
             traceback.print_exc()
         return None
-    return response.choices[0].message.content
