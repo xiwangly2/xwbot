@@ -7,4 +7,3 @@ Requests~=2.32.3
 SQLAlchemy~=2.0.37
 DBUtils~=3.0.3
 aisuite[openai]~=0.1.10
-docstring_parser~=0.16

@@ -13,8 +13,8 @@ RUN arch=$(uname -m) && \
     if [ "$arch" = "x86_64" ] || [ "$arch" = "aarch64" ]; then \
         # 主流架构安装完整依赖
         pip install --no-cache-dir -r requirements.txt && \
-        pip install --no-cache-dir pytest-playwright~=0.6.2 aisuite[all]~=0.1.10 && \
-        playwright install --with-deps; \
+        pip install --no-cache-dir playwright~=1.50.0 aisuite[all]~=0.1.10 docstring_parser~=0.16 && \
+        playwright install --with-deps chromium; \
     else \
         if [ "$arch" = "s390x" ]; then \
             # 仅在 s390x 上排除 psycopg2
