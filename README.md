@@ -22,6 +22,8 @@ docker run -itd -v $PWD/xwbot/config/config.yml:/app/config/config.yml --name=xw
 
 `ghcr.io/xiwangly2/xwbot:main` 镜像同时安装了多种数据库的依赖支持，如果您想要更精简，可以自行构建镜像
 
+目前 amd64 和 arm64 架构的 docker 镜像安装了完整的依赖，其它的架构由于适配问题暂时未安装完整依赖
+
 ## 配置说明
 
 配置文件在`config/config_example.yml`，您需要将`config/config_example.yml`复制到`config/config.yml`并编辑其中的设置
@@ -82,4 +84,4 @@ docker rmi ghcr.io/xiwangly2/xwbot:main
 
 
 > [!WARNING]
-> 请注意，在 ppc64le/s390x 架构上，可能会出现一些问题，这是因为某些依赖库（如 psycopg2 ）不支持这些架构，如果您遇到了这些问题，请自行解决
+> 请注意，在 s390x 架构上，可能会出现一些问题，这是因为某些依赖库（如 psycopg2 ）不支持这些架构，如果您遇到了这些问题，请自行解决
