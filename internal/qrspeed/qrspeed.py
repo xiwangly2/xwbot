@@ -1,6 +1,4 @@
 import re
-from internal.config import config
-
 
 messages = None
 message = None

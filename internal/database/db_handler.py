@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 
 from sqlalchemy.orm import sessionmaker
+
 from internal.database.init import engine
 from internal.database.models.logs import Logs
 from internal.database.models.switch import Switch

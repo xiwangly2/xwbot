@@ -1,15 +1,19 @@
 import base64
 import html
 import json
+import platform
 import re
+
 import aiohttp
 import requests
+
 from internal.api.MessageBuilder import MessageBuilder
-from internal.database.db_handler import get_bot_switch, set_bot_switch, set_chat_logs
-from internal.format_output import clear_terminal, print_error
-from internal.api.OneBot11 import send_msg, get_forward_msg, send_like, delete_msg, set_group_special_title, get_group_member_info
+from internal.api.OneBot11 import send_msg, get_forward_msg, send_like, delete_msg, set_group_special_title, \
+    get_group_member_info
 from internal.api.gocqhttp import check_url_safely
 from internal.config import config
+from internal.database.db_handler import get_bot_switch, set_bot_switch, set_chat_logs
+from internal.format_output import clear_terminal, print_error
 
 
 def parse_message(messages):
@@ -63,7 +67,7 @@ async def is_safe_url(ws, url):
 
 async def handle_loli_command():
     try:
-        api_url = 'https://api.xiwangly.com/image-cs.php?key=123456&return=json'
+        api_url = 'https://www.dmoe.cc/random.php?return=json'
         response = requests.get(api_url)
         img_url = response.json()['imgurl']
         return {'text_list': ['您要的loli:', MessageBuilder.image(img_url)]}
@@ -94,8 +98,6 @@ async def handle_math_command(arg, arg_len):
 # noinspection PyPackageRequirements,PyProtectedMember
 async def screenshot_command(arg, arg_len):
     import platform
-    from playwright.async_api import async_playwright
-    from playwright._impl._errors import Error
 
     # 获取系统架构
     arch = platform.machine()
@@ -107,6 +109,9 @@ async def screenshot_command(arg, arg_len):
             return "参数过多"
 
         full_page = arg_len == 3
+
+        from playwright.async_api import async_playwright
+        from playwright._impl._errors import Error
 
         async with async_playwright() as p:
             browser = await p.chromium.launch()
@@ -125,7 +130,7 @@ async def screenshot_command(arg, arg_len):
         return f"当前功能不支持系统架构: {arch}"
 
 
-async def chat_thesaurus(messages, ws=None):
+async def chat_thesaurus(messages, ws=None, chat_ai_process=None):
     message, arg, arg_len, arg_all = parse_message(messages)
     is_admin = f_is_admin(messages['user_id'])
 
@@ -153,7 +158,10 @@ async def chat_thesaurus(messages, ws=None):
             return "Bot is off."
         elif arg[0] == '/CQ' and is_admin:
             set_bot_switch(messages['group_id'], 'CQ')
-            return "Bot transitioned from Running state to CQ state."
+            return "Bot transitioned to CQ state."
+        elif arg[0] == '/AI' and is_admin:
+            set_bot_switch(messages['group_id'], 'AI')
+            return "Bot transitioned to AI state."
         elif arg[0] == '/help':
             return "这是一个帮助列表<Response [200]>"
         elif arg[0] == '/来份萝莉' or arg[0] == '/loli':
@@ -242,6 +250,23 @@ async def chat_thesaurus(messages, ws=None):
             /off 关闭机器人
             ……
             """
+        elif arg[0] == '/shell' and is_admin:
+            # Dangerous command
+            # 你应该知道你要做什么
+            import subprocess
+            try:
+                # check os
+                if platform.system() == 'Windows':
+                    result = subprocess.check_output(arg_all, shell=True, encoding='gbk')
+                else:
+                    result = subprocess.check_output(arg_all, shell=True).decode()
+
+                # Split result into chunks of 2048 characters
+                chunk_size = 2048
+                result_chunks = [result[i:i + chunk_size] for i in range(0, len(result), chunk_size)]
+                return result_chunks
+            except subprocess.CalledProcessError as e:
+                return str(e)
         elif arg[0] == '/set_group_special_title':
             role = await get_group_member_info(ws, messages['group_id'], messages['self_id'])
             role = role['data']['role']
@@ -250,7 +275,8 @@ async def chat_thesaurus(messages, ws=None):
                     # /set_group_special_title @user title
                     await set_group_special_title(ws, messages['group_id'], re.sub(r'\[CQ:at,qq=(\d+)]', r'\1', arg[1]),
                                                   arg[2])
-                    text = "为用户[CQ:at,qq=" + re.sub(r'\[CQ:at,qq=(\d+)]', r'\1', arg[1]) + "]设置了群组专属头衔：" + arg[2]
+                    text = "为用户[CQ:at,qq=" + re.sub(r'\[CQ:at,qq=(\d+)]', r'\1', arg[1]) + "]设置了群组专属头衔：" + \
+                           arg[2]
                 elif arg_len == 3 and re.match(r'^\d+$', arg[1]) and is_admin:
                     # /set_group_special_title user_id title
                     await set_group_special_title(ws, messages['group_id'], arg[1], arg[2])
@@ -276,7 +302,7 @@ async def chat_thesaurus(messages, ws=None):
     elif bot_switch.switch == 'CQ':
         if arg[0] == '/on' and is_admin:
             set_bot_switch(messages['group_id'], '1')
-            return "Bot transitioned from CQ state to Running state."
+            return "Bot transitioned to Running state."
         elif arg[0] == '/off' and is_admin:
             set_bot_switch(messages['group_id'], '0')
             return "Bot is off."
@@ -320,11 +346,48 @@ async def chat_thesaurus(messages, ws=None):
             }
         else:
             return None
+    elif bot_switch.switch == 'AI':
+        if arg[0] == '/on' and is_admin:
+            set_bot_switch(messages['group_id'], '1')
+            return "Bot transitioned to Running state."
+        elif arg[0] == '/off' and is_admin:
+            set_bot_switch(messages['group_id'], '0')
+            return "Bot is off."
+        elif arg[0] == '/memory' and is_admin:
+            if arg_len == 1:
+                return "/memory [clear|message]"
+            elif arg_len == 2:
+                if arg[1] == 'clear':
+                    with open('memory.txt', 'w', encoding='utf-8') as f:
+                        f.write('')
+                    return "记忆已清空"
+                else:
+                    # 控制记忆长度（按字符截断）
+                    if len(arg[1]) > 1000:
+                        arg[1] = arg[1][-1:]
+                    # 写入记忆文件
+                    with open('memory.txt', 'w', encoding='utf-8') as f:
+                        f.write(f"system: {arg[1]}\n")
+                    return "已记忆"
+            else:
+                return "参数错误"
+        else:
+
+            # 将消息发送到 chat_ai 进程
+            chat_ai_process.input_queue.put((messages, messages['message']))
+
+            # 获取 chat_ai 进程的回复
+            if not chat_ai_process.output_queue.empty():
+                result = chat_ai_process.output_queue.get()
+                if result == 'no reply' or result is None:
+                    return None
+                else:
+                    return result.rstrip('\n')
     else:
         return None
 
 
-async def while_msg(ws):
+async def while_msg(ws, chat_ai_process=None):
     while True:
         try:
             # 控制跳出
@@ -361,7 +424,7 @@ async def while_msg(ws):
                 set_chat_logs(messages)
 
             # 查找词库获取回答
-            text = await chat_thesaurus(messages, ws)
+            text = await chat_thesaurus(messages, ws, chat_ai_process)
             if text is None:
                 continue
             if isinstance(text, str):

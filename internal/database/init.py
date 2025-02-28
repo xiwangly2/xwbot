@@ -1,4 +1,5 @@
 from sqlalchemy import create_engine
+
 from internal.config import config
 from internal.database.models.logs import Logs
 from internal.database.models.pic import Pic
