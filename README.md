@@ -15,6 +15,8 @@
 数据库可能需要额外安装并配置，如果您使用的是 sqlite3，那么无需额外配置
 
 ```shell
+mkdir -p $PWD/xwbot/config
+curl -o $PWD/xwbot/config/config.yml https://raw.githubusercontent.com/xiwangly2/xwbot/refs/heads/main/config/config_example.yml
 docker run -itd -v $PWD/xwbot/config/config.yml:/app/config/config.yml --name=xwbot --pull=always --restart=always ghcr.io/xiwangly2/xwbot:main
 ```
 
