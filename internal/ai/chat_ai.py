@@ -127,9 +127,12 @@ def start_chat_ai_process():
     return chat_ai_instance  # 返回 ChatAIProcess 实例
 
 
+# noinspection PyUnresolvedReferences
 def stop_chat_ai_process():
     """停止 chat_ai 进程"""
     global chat_ai_process
-    if chat_ai_process is not None:
+    if chat_ai_process is not None and chat_ai_process.is_alive():
+        chat_ai_process.terminate()
+        chat_ai_process.join()
         chat_ai_process = None
-        print_info("chat_ai 进程已停止。")
+        print("chat_ai 进程已停止。")
