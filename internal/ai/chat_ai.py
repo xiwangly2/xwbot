@@ -26,6 +26,16 @@ def _generate_response(messages, message):
     except FileNotFoundError:
         memory_lines = []
 
+    # 构造记忆上下文
+    memory_str = ''.join(memory_lines)
+
+    ai_messages = [
+        {"role": "system",
+         "content": '你现在处于QQ群聊中，作为博学可爱的群员，自然交流，避免刻意卖萌，回答需简洁（50字内最佳）但富有情感。'},
+        {"role": "user", "content": f"记忆上下文:\n{memory_str}"},
+        {"role": "user", "content": f"新消息:\n{messages}"},
+    ]
+
     # 添加新记录（转义单引号）
     new_message = message.replace("'", "\\'")
     new_line = f"time:'{messages['time']}',user_id:'{messages['user_id']}',message:'{new_message}'\n"
@@ -39,20 +49,6 @@ def _generate_response(messages, message):
     if len(''.join(memory_lines)) > 1000:
         memory_lines = memory_lines[-1:]
 
-    # 写入记忆文件
-    with open('memory.txt', 'w', encoding='utf-8') as f:
-        f.writelines(memory_lines)
-
-    # 构造记忆上下文
-    memory_str = ''.join(memory_lines)
-
-    ai_messages = [
-        {"role": "system",
-         "content": '你现在处于QQ群聊中，作为博学可爱的群员，自然交流，避免刻意卖萌，回答需简洁（50字内最佳）但富有情感。'},
-        {"role": "user", "content": f"记忆上下文:\n{memory_str}"},
-        {"role": "user", "content": f"新消息:\n{messages}"},
-    ]
-
     try:
         if messages['self_id'] == messages['user_id']:
             return None
@@ -62,6 +58,10 @@ def _generate_response(messages, message):
             messages=ai_messages,
             temperature=0.7,
         )
+
+        # 写入记忆文件
+        with open('memory.txt', 'w', encoding='utf-8') as f:
+            f.writelines(memory_lines)
         return response.choices[0].message.content
     except Exception:
         if config['debug']:
@@ -127,9 +127,12 @@ def start_chat_ai_process():
     return chat_ai_instance  # 返回 ChatAIProcess 实例
 
 
+# noinspection PyUnresolvedReferences
 def stop_chat_ai_process():
     """停止 chat_ai 进程"""
     global chat_ai_process
-    if chat_ai_process is not None:
+    if chat_ai_process is not None and chat_ai_process.is_alive():
+        chat_ai_process.terminate()
+        chat_ai_process.join()
         chat_ai_process = None
-        print_info("chat_ai 进程已停止。")
+        print("chat_ai 进程已停止。")

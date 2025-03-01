@@ -1,3 +1,4 @@
+# 下面是示例的 docker-compose.yml 文件，你应该根据自己的需求进行修改
 version: '3'
 services:
   xwbot:
@@ -10,28 +11,56 @@ services:
       - ./config:/app/config
     # 环境变量可以在此处添加，根据需要自行配置
 
-  go-cqhttp:
-    image: mrs4s/cqhttp:latest # 使用 go-cqhttp 镜像
-    container_name: go-cqhttp
-    restart: always
-    volumes:
-      - ./go-cqhttp:/data
-    ports:
-      - "9000:9000" # 请根据需要配置端口
+#  go-cqhttp:
+#    image: mrs4s/cqhttp:latest # 使用 go-cqhttp 镜像
+#    container_name: go-cqhttp
+#    restart: always
+#    volumes:
+#      - ./go-cqhttp:/data
+#    ports:
+#      - "9000:9000" # 请根据需要配置端口
+#
+#  mysql:
+#    image: mysql:latest
+#    container_name: mysql
+#    restart: always
+#    environment:
+#      MYSQL_ROOT_PASSWORD: your_root_password # 替换为您的MySQL root密码
+#      MYSQL_DATABASE: xwbot_db # 替换为您的数据库名称
+#      MYSQL_USER: xwbot_user # 替换为您的数据库用户名
+#      MYSQL_PASSWORD: your_db_password # 替换为您的数据库密码
+#    volumes:
+#      - ./mysql/data:/var/lib/mysql
+#    ports:
+#      - "3306:3306" # 如果需要从主机访问MySQL，请根据需要配置端口
 
-  mysql:
-    image: mysql:latest
-    container_name: mysql
+  postgres:
+    image: postgres:latest
+    container_name: postgres
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: your_root_password # 替换为您的MySQL root密码
-      MYSQL_DATABASE: xwbot_db # 替换为您的数据库名称
-      MYSQL_USER: xwbot_user # 替换为您的数据库用户名
-      MYSQL_PASSWORD: your_db_password # 替换为您的数据库密码
+      POSTGRES_USER: xwbot_user # 替换为您的数据库用户名
+      POSTGRES_PASSWORD: your_db_password # 替换为您的数据库密码
+      POSTGRES_DB: xwbot_db # 替换为您的数据库名称
     volumes:
-      - ./mysql/data:/var/lib/mysql
+      - ./postgres/data:/var/lib/postgresql/data
     ports:
-      - "3306:3306" # 如果需要从主机访问MySQL，请根据需要配置端口
+      - "5432:5432" # 如果需要从主机访问PostgreSQL，请根据需要配置端口
+
+  napcat:
+      image: mlikiowa/napcat-docker:latest
+      container_name: napcat
+      restart: always
+      environment:
+        ACCOUNT: "your_QQ_number"
+        WS_ENABLE: true
+        NAPCAT_GID: 0
+        NAPCAT_UID: 0
+      ports:
+      - "6703:3001"
+      - "6099:6099"
+      networks:
+      - host
 
 networks:
   host:

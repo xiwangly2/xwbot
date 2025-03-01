@@ -15,12 +15,16 @@
 数据库可能需要额外安装并配置，如果您使用的是 sqlite3，那么无需额外配置
 
 ```shell
+mkdir -p $PWD/xwbot/config
+curl -o $PWD/xwbot/config/config.yml https://raw.githubusercontent.com/xiwangly2/xwbot/refs/heads/main/config/config_example.yml
 docker run -itd -v $PWD/xwbot/config/config.yml:/app/config/config.yml --name=xwbot --pull=always --restart=always ghcr.io/xiwangly2/xwbot:main
 ```
 
 您可能需要自行映射端口，或者使用`--network host`参数，以便让程序能够访问到 OneBot WebSocket 服务器
 
 `ghcr.io/xiwangly2/xwbot:main` 镜像同时安装了多种数据库的依赖支持，如果您想要更精简，可以自行构建镜像
+
+目前 amd64 和 arm64 架构的 docker 镜像安装了完整的依赖，其它的架构由于适配问题暂时未安装完整依赖
 
 ## 配置说明
 
@@ -47,7 +51,21 @@ admin: # 这些列表决定了谁可以使用管理员命令和一些危险的�
   - '1001'
 
 sql: # 数据库配置，多选一
-  type: "sqlite3" # 数据库类型，目前支持 sqlite3，mysql，postgres
+  type: "sqlite3" # 数据库类型，目前支持 sqlite3，mysql，postgres, dsn（其它的需要自行解决依赖）
+```
+
+```yaml
+# 一些可选的配置示例
+sql:
+#    ...
+    <sql_type>:
+      connect_args: {
+            'ssl': {
+                'ca': "",
+                'key': "",
+                'cert': "",
+            }
+        }
 ```
 
 以上配置文件可能会有所变动而没来得及更新，以最新提交的示例配置文件为准
@@ -82,4 +100,4 @@ docker rmi ghcr.io/xiwangly2/xwbot:main
 
 
 > [!WARNING]
-> 请注意，在 ppc64le/s390x 架构上，可能会出现一些问题，这是因为某些依赖库（如 psycopg2 ）不支持这些架构，如果您遇到了这些问题，请自行解决
+> 请注意，在 s390x 架构上，可能会出现一些问题，这是因为某些依赖库（如 psycopg2 ）不支持这些架构，如果您遇到了这些问题，请自行解决
