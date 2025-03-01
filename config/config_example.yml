@@ -17,17 +17,16 @@ admin:
   - '1000'
 
 sql: # 数据库配置，多选一
-  type: "sqlite3" # 数据库类型，目前支持 sqlite3，mysql，postgres
+  type: "sqlite3" # 数据库类型，目前支持 sqlite3，mysql，postgres, dsn（其它的需要自行解决依赖）
+  dsn: "" # 数据库 dsn, 示例： "oracle+oracledb://scott:tiger@localhost:1521?service_name=xwbot"
   sqlite3:
     path: "data.db" # sqlite3 数据库文件路径
-    dsn: "" # 数据库 dsn
   mysql:
     host: "127.0.0.1" # 数据库地址
     port: "3306" # 数据库端口
     database: "xwbot" # 数据库名
     username: "xwbot" # 数据库用户名
     password: "123456" # 数据库密码
-    dsn: "" # 数据库 dsn
     ssl_mode: "disable" # 数据库连接 ssl 模式
     ca_path: "" # 数据库连接 ca 证书路径
     key_path: "" # 数据库连接 key 证书路径
@@ -38,7 +37,6 @@ sql: # 数据库配置，多选一
     database: "xwbot" # 数据库名
     username: "xwbot" # 数据库用户名
     password: "123456" # 数据库密码
-    dsn: "" # 数据库 dsn
     ssl_mode: "disable" # 数据库连接 ssl 模式
     srv: false # 是否使用 srv 记录连接数据库
     ca_path: "" # 数据库连接 ca 证书路径

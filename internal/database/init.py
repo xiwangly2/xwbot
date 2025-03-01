@@ -7,12 +7,14 @@ from internal.database.models.switch import Switch
 from internal.format_output import print_error
 
 
+def _handle_dsn(sql_config):
+    """处理其他数据库配置"""
+    return sql_config, {}
+
+
 def _handle_sqlite3(sql_config):
     """处理SQLite3数据库配置"""
-    return (
-        sql_config.get('dsn') or f"sqlite:///{sql_config['path']}",
-        {}
-    )
+    return f"sqlite:///{sql_config['path']}", {}
 
 
 def _handle_mysql(sql_config):
@@ -27,14 +29,7 @@ def _handle_mysql(sql_config):
             }
         }
 
-    return (
-        sql_config.get('dsn') or (
-            f"mysql+pymysql://{sql_config['username']}:"
-            f"{sql_config['password']}@{sql_config['host']}:"
-            f"{sql_config['port']}/{sql_config['database']}"
-        ),
-        ssl_args
-    )
+    return f"mysql+pymysql://{sql_config['username']}:{sql_config['password']}@{sql_config['host']}:{sql_config['port']}/{sql_config['database']}", ssl_args
 
 
 def _handle_postgres(sql_config):
@@ -51,22 +46,17 @@ def _handle_postgres(sql_config):
     driver = 'psycopg2srv' if sql_config['srv'] else 'psycopg2'
     ssl_suffix = f"?{'&'.join(ssl_params)}" if ssl_params else ""
 
-    return (
-        sql_config.get('dsn') or (
-            f"postgresql+{driver}://{sql_config['username']}:"
-            f"{sql_config['password']}@{sql_config['host']}:"
-            f"{sql_config['port']}/{sql_config['database']}"
-            f"{ssl_suffix}"
-        ),
-        {}
-    )
+    host_port = f"{sql_config['host']}" if sql_config['srv'] else f"{sql_config['host']}:{sql_config['port']}"
+
+    return f"postgresql+{driver}://{sql_config['username']}:{sql_config['password']}@{host_port}/{sql_config['database']}{ssl_suffix}", {}
 
 
 # 数据库类型与处理函数的映射
 DB_HANDLERS = {
+    'dsn': (_handle_dsn, 'dsn'),
     'sqlite3': (_handle_sqlite3, 'sqlite3'),
     'mysql': (_handle_mysql, 'mysql'),
-    'postgres': (_handle_postgres, 'postgres')
+    'postgres': (_handle_postgres, 'postgres'),
 }
 
 engine = None
