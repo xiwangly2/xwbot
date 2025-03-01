@@ -49,7 +49,21 @@ admin: # 这些列表决定了谁可以使用管理员命令和一些危险的�
   - '1001'
 
 sql: # 数据库配置，多选一
-  type: "sqlite3" # 数据库类型，目前支持 sqlite3，mysql，postgres
+  type: "sqlite3" # 数据库类型，目前支持 sqlite3，mysql，postgres, dsn（其它的需要自行解决依赖）
+```
+
+```yaml
+# 一些可选的配置示例
+sql:
+#    ...
+    <sql_type>:
+      connect_args: {
+            'ssl': {
+                'ca': "",
+                'key': "",
+                'cert': "",
+            }
+        }
 ```
 
 以上配置文件可能会有所变动而没来得及更新，以最新提交的示例配置文件为准

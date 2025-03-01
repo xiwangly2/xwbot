@@ -8,13 +8,13 @@ from internal.format_output import print_error
 
 
 def _handle_dsn(sql_config):
-    """处理其他数据库配置"""
+    """处理DSN数据库配置"""
     return sql_config, {}
 
 
 def _handle_sqlite3(sql_config):
     """处理SQLite3数据库配置"""
-    return f"sqlite:///{sql_config['path']}", {}
+    return f"sqlite:///{sql_config['path']}", sql_config['connect_args']
 
 
 def _handle_mysql(sql_config):
@@ -29,7 +29,7 @@ def _handle_mysql(sql_config):
             }
         }
 
-    return f"mysql+pymysql://{sql_config['username']}:{sql_config['password']}@{sql_config['host']}:{sql_config['port']}/{sql_config['database']}", ssl_args
+    return f"mysql+pymysql://{sql_config['username']}:{sql_config['password']}@{sql_config['host']}:{sql_config['port']}/{sql_config['database']}", {**sql_config['connect_args'], **ssl_args}
 
 
 def _handle_postgres(sql_config):
@@ -48,7 +48,7 @@ def _handle_postgres(sql_config):
 
     host_port = f"{sql_config['host']}" if sql_config['srv'] else f"{sql_config['host']}:{sql_config['port']}"
 
-    return f"postgresql+{driver}://{sql_config['username']}:{sql_config['password']}@{host_port}/{sql_config['database']}{ssl_suffix}", {}
+    return f"postgresql+{driver}://{sql_config['username']}:{sql_config['password']}@{host_port}/{sql_config['database']}{ssl_suffix}", sql_config['connect_args']
 
 
 # 数据库类型与处理函数的映射
