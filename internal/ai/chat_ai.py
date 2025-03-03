@@ -17,7 +17,7 @@ def _generate_response(messages, message):
     }})
 
     model = config["aisuite"]["model"]
-    max_memory_lines = 20
+    max_memory_lines = 100
 
     # 读取现有记忆
     try:
@@ -38,7 +38,7 @@ def _generate_response(messages, message):
 
     # 添加新记录（转义单引号）
     new_message = message.replace("'", "\\'")
-    new_line = f"time:'{messages['time']}',user_id:'{messages['user_id']}',message:'{new_message}'\n"
+    new_line = f"time:'{messages['time']}', group_id:'{messages['group_id']}, user_id:'{messages['user_id']}',message:'{new_message}'\n"
     memory_lines.append(new_line)
 
     # 控制记忆长度（按行截断）
@@ -86,7 +86,8 @@ class ChatAIProcess:
                 self._update_heat_value(messages, message)
                 if self.heat_value > 0 or f"[CQ:at,qq={messages['self_id']}]" in message:
                     response = _generate_response(messages, message)
-                    self.output_queue.put(response)
+                    if response:
+                        self.output_queue.put(response)
             except Exception:
                 # 如果没有消息，跳过处理
                 pass
