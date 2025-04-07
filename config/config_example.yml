@@ -30,10 +30,6 @@ sql: # 数据库配置，多选一
     database: "xwbot" # 数据库名
     username: "xwbot" # 数据库用户名
     password: "123456" # 数据库密码
-    ssl_mode: "disable" # 数据库连接 ssl 模式
-    ca_path: "" # 数据库连接 ca 证书路径
-    key_path: "" # 数据库连接 key 证书路径
-    cert_path: "" # 数据库连接 cert 证书路径
     connect_args: {}
   postgres:
     host: "127.0.0.1" # 数据库地址
@@ -42,10 +38,6 @@ sql: # 数据库配置，多选一
     username: "xwbot" # 数据库用户名
     password: "123456" # 数据库密码
     srv: false # 是否使用 srv 记录连接数据库
-    ssl_mode: "disable" # 数据库连接 ssl 模式
-    ca_path: "" # 数据库连接 ca 证书路径
-    key_path: "" # 数据库连接 key 证书路径
-    cert_path: "" # 数据库连接 cert 证书路径
     connect_args: {}
 
 aisuite:

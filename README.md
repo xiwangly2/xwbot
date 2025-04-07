@@ -20,7 +20,7 @@ curl -o $PWD/xwbot/config/config.yml https://raw.githubusercontent.com/xiwangly2
 docker run -itd -v $PWD/xwbot/config/config.yml:/app/config/config.yml --name=xwbot --pull=always --restart=always ghcr.io/xiwangly2/xwbot:main
 ```
 
-您可能需要自行映射端口，或者使用`--network host`参数，以便让程序能够访问到 OneBot WebSocket 服务器
+您可能需要自行映射端口和配置网络，或者使用`--network host`参数，以便让程序能够访问到 OneBot WebSocket 服务器
 
 `ghcr.io/xiwangly2/xwbot:main` 镜像同时安装了多种数据库的依赖支持，如果您想要更精简，可以自行构建镜像
 
@@ -55,17 +55,17 @@ sql: # 数据库配置，多选一
 ```
 
 ```yaml
-# 一些可选的配置示例
+# 一些可选的配置示例，具体的配置请参考 sqlalchemy 的文档
 sql:
 #    ...
     <sql_type>:
       connect_args: {
-            'ssl': {
-                'ca': "",
-                'key': "",
-                'cert': "",
-            }
-        }
+        ssl: "true", # 是否使用 ssl 连接数据库
+        ssl_ca: '/path/to/ca.pem', # ssl ca 证书路径
+        ssl_cert: '/path/to/client-cert.pem', # ssl client 证书路径
+        ssl_key: '/path/to/client-key.pem', # ssl client key 证书路径
+        ssl_verify: "true", # 是否验证 ssl 证书
+      }
 ```
 
 以上配置文件可能会有所变动而没来得及更新，以最新提交的示例配置文件为准
