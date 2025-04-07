@@ -19,36 +19,14 @@ def _handle_sqlite3(sql_config):
 
 def _handle_mysql(sql_config):
     """处理MySQL数据库配置"""
-    ssl_args = {}
-    if sql_config['ssl_mode'] != 'disable':
-        ssl_args = {
-            'ssl': {
-                'ca': sql_config['ca_path'],
-                'key': sql_config['key_path'],
-                'cert': sql_config['cert_path']
-            }
-        }
-
-    return f"mysql+pymysql://{sql_config['username']}:{sql_config['password']}@{sql_config['host']}:{sql_config['port']}/{sql_config['database']}", {**sql_config['connect_args'], **ssl_args}
+    return f"mysql+pymysql://{sql_config['username']}:{sql_config['password']}@{sql_config['host']}:{sql_config['port']}/{sql_config['database']}", sql_config['connect_args']
 
 
 def _handle_postgres(sql_config):
     """处理PostgreSQL数据库配置"""
-    ssl_params = []
-    if sql_config['ssl_mode'] in ['require', 'verify-ca', 'verify-full']:
-        ssl_params.extend([
-            f"sslmode={sql_config['ssl_mode']}",
-            f"sslrootcert={sql_config['ca_path']}",
-            f"sslcert={sql_config['cert_path']}",
-            f"sslkey={sql_config['key_path']}"
-        ])
-
     driver = 'psycopg2srv' if sql_config['srv'] else 'psycopg2'
-    ssl_suffix = f"?{'&'.join(ssl_params)}" if ssl_params else ""
-
     host_port = f"{sql_config['host']}" if sql_config['srv'] else f"{sql_config['host']}:{sql_config['port']}"
-
-    return f"postgresql+{driver}://{sql_config['username']}:{sql_config['password']}@{host_port}/{sql_config['database']}{ssl_suffix}", sql_config['connect_args']
+    return f"postgresql+{driver}://{sql_config['username']}:{sql_config['password']}@{host_port}/{sql_config['database']}", sql_config['connect_args']
 
 
 # 数据库类型与处理函数的映射
