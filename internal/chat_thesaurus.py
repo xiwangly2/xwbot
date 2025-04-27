@@ -126,6 +126,7 @@ async def screenshot_command(arg, arg_len):
                 return f"无法访问链接: {arg[1]} 错误: {str(e)}"
             finally:
                 await browser.close()
+                return None
     else:
         return f"当前功能不支持系统架构: {arch}"
 
@@ -162,6 +163,9 @@ async def chat_thesaurus(messages, ws=None, chat_ai_process=None):
         elif arg[0] == '/AI' and is_admin:
             set_bot_switch(messages['group_id'], 'AI')
             return "Bot transitioned to AI state."
+        elif arg[0] == '/QA' and is_admin:
+            set_bot_switch(messages['group_id'], 'QA')
+            return "Bot transitioned to QA state."
         elif arg[0] == '/help':
             return "这是一个帮助列表<Response [200]>"
         elif arg[0] == '/来份萝莉' or arg[0] == '/loli':
@@ -383,6 +387,20 @@ async def chat_thesaurus(messages, ws=None, chat_ai_process=None):
                     return None
                 else:
                     return result.rstrip('\n')
+            return None
+    elif bot_switch.switch == 'QA':
+        from internal.ai.qa import generate_response
+        if arg[0] == '/on' and is_admin:
+            set_bot_switch(messages['group_id'], '1')
+            return "Bot transitioned to Running state."
+        elif arg[0] == '/off' and is_admin:
+            set_bot_switch(messages['group_id'], '0')
+            return "Bot is off."
+        else:
+            text = await generate_response(f"{messages}")
+            if text == 'no reply' or text is None:
+                return None
+            return text
     else:
         return None
 
