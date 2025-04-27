@@ -103,14 +103,29 @@ async def handle_file_message(ws, messages, message):
             return "未找到文件ID"
         file_id = match.group(1)
 
-        # 调用 get_file 函数获取文件信息
-        file_info = await get_group_file_url(ws, messages['group_id'], file_id)
-        print_purple(file_info)
-        if file_info:
-            file_url = file_info['file_url']
-            return f"文件链接: {file_url}"
+        if messages['message_type'] == 'group':
+            # 调用 get_group_file_url 函数获取文件信息
+            file_info = await get_group_file_url(ws, messages['group_id'], file_id)
+        elif messages['message_type'] == 'private':
+            # 调用 get_private_file_url 函数获取文件消息
+            file_info = await get_group_file_url(ws, messages['user_id'], file_id)
         else:
-            return "未能获取文件信息"
+            return None
+        print_purple(file_info)
+
+        # 检查初始返回值
+        if not file_info or 'data' not in file_info:
+            # 等待后续消息获取真正的 URL
+            while True:
+                response = await ws.receive()
+                next_message = json.loads(response.data)
+
+                # 检查是否是包含 URL 的消息
+                if 'data' in next_message and 'url' in next_message['data']:
+                    file_url = next_message['data']['url']
+                    return [f"文件ID: {file_info["file"]["id"]}\n文件名称: {file_info["file"]["name"]}\n文件大小: {file_info["file"]["size"]}",
+                            f"文件链接: {file_url}"]
+        return None
     except Exception as e:
         if config['debug']:
             import traceback
