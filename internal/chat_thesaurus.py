@@ -10,10 +10,10 @@ import requests
 from internal.api.MessageBuilder import MessageBuilder
 from internal.api.OneBot11 import send_msg, get_forward_msg, send_like, delete_msg, set_group_special_title, \
     get_group_member_info
-from internal.api.gocqhttp import check_url_safely
+from internal.api.gocqhttp import check_url_safely, get_group_file_url
 from internal.config import config
 from internal.database.db_handler import get_bot_switch, set_bot_switch, set_chat_logs
-from internal.format_output import clear_terminal, print_error
+from internal.format_output import clear_terminal, print_error, print_purple
 
 
 def parse_message(messages):
@@ -93,6 +93,29 @@ async def handle_math_command(arg, arg_len):
     async with aiohttp.ClientSession():
         response = requests.post(url="https://api.xiwangly.com/math.php", data=data)
         return f"{response.text}"
+
+
+async def handle_file_message(ws, messages, message):
+    try:
+        # 从消息中提取 file_id
+        match = re.search(r'file_id=([^,]+)', message)
+        if not match:
+            return "未找到文件ID"
+        file_id = match.group(1)
+
+        # 调用 get_file 函数获取文件信息
+        file_info = await get_group_file_url(ws, messages['group_id'], file_id)
+        print_purple(file_info)
+        if file_info:
+            file_url = file_info['file_url']
+            return f"文件链接: {file_url}"
+        else:
+            return "未能获取文件信息"
+    except Exception as e:
+        if config['debug']:
+            import traceback
+            traceback.print_exc()
+        return f"处理文件消息时出错: {str(e)}"
 
 
 # noinspection PyPackageRequirements,PyProtectedMember
@@ -331,6 +354,8 @@ async def chat_thesaurus(messages, ws=None, chat_ai_process=None):
                 'auto_escape': True,
                 'text_list': ['解析合并转发:', text]
             }
+        elif re.search(r'^\[CQ:file(.+)]', message):
+            return await handle_file_message(ws, messages, message)
         elif re.search(r'(.+)?/(.+)?pic(.+)?', message):
             from internal.pic import pic
             # 表情包功能
