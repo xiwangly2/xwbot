@@ -8,16 +8,24 @@ COPY . /app
 
 # 根据架构选择性安装
 RUN arch=$(uname -m) && \
-    apt update && \
-    apt install -y gcc python3-dev libpq-dev && \
     if [ "$arch" = "x86_64" ] || [ "$arch" = "aarch64" ]; then \
         # 主流架构安装完整依赖
         pip install --no-cache-dir -r requirements.txt && \
-        pip install --no-cache-dir pytest-playwright~=0.6.2 docstring_parser~=0.16 aisuite[all]~=0.1.10 && \
+        pip install --no-cache-dir pytest-playwright~=0.6.2 docstring_parser~=0.16 && \
         playwright install --with-deps chromium; \
     else \
-        # 其他架构安装部分依赖 \
-        pip install --no-cache-dir -r requirements.txt; \
+        if [ "$arch" ~= "armv7" ]; then \
+            apt update && \
+            apt install -y gcc python3-dev libpq-dev && \
+            # armv7 架构安装部分依赖 \
+            # 替换psycopg[binary]为psycopg[c] \
+            sed -i 's/psycopg\[binary\]/psycopg\[c\]/' requirements.txt && \
+            # armv7 架构安装 psycopg[c] 依赖 \
+            pip install --no-cache-dir -r requirements.txt; \
+        else \
+            # 其他架构安装部分依赖 \
+            pip install --no-cache-dir -r requirements.txt; \
+        fi \
     fi
 
 CMD ["python", "/app/main.py"]

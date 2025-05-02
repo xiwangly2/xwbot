@@ -1,6 +1,6 @@
 aiohttp~=3.10.11
 colorama~=0.4.6
-psycopg[c]~=3.2.7
+psycopg[binary]~=3.2.7
 PyMySQL~=1.1.1
 PyYAML~=6.0.2
 Requests~=2.32.3
