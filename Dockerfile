@@ -1,29 +1,38 @@
 FROM python:3.13.2-bookworm AS base
+ARG TARGETARCH
+ARG TARGETVARIANT
 
 ENV TZ=Asia/Shanghai
-
 WORKDIR /app
-
 COPY . /app
 
-# 根据架构选择性安装
-RUN arch=$(uname -m) && \
-    echo "Debug: Current architecture is $arch" && \
-    if [ "$arch" = "x86_64" ] || [ "$arch" = "aarch64" ]; then \
-        # 主流架构安装完整依赖
-        pip install --no-cache-dir -r requirements.txt && \
-        pip install --no-cache-dir pytest-playwright~=0.6.2 docstring_parser~=0.16 && \
-        playwright install --with-deps chromium; \
-    elif [ "$arch" = "arm" ]; then \
-        apt update && \
-        apt install -y gcc python3-dev libpq-dev && \
-        apt-get clean && rm -rf /var/lib/apt/lists/* && \
-        # 替换 psycopg[binary] 为 psycopg[c]
-        sed -i 's/psycopg\[binary\]/psycopg\[c\]/' requirements.txt && \
-        pip install --no-cache-dir -r requirements.txt; \
-    else \
-        # 其他架构安装部分依赖
-        pip install --no-cache-dir -r requirements.txt; \
-    fi
+RUN set -eux; \
+    arch="$(uname -m)"; \
+    case "$arch" in \
+        x86_64|amd64) \
+            echo "Installing full deps for x86_64…"; \
+            pip install --no-cache-dir -r requirements.txt; \
+            pip install --no-cache-dir pytest-playwright~=0.6.2 docstring_parser~=0.16; \
+            playwright install --with-deps chromium \
+            ;; \
+        aarch64|arm64) \
+            echo "Installing full deps for ARM64 (aarch64)…"; \
+            pip install --no-cache-dir -r requirements.txt; \
+            pip install --no-cache-dir pytest-playwright~=0.6.2 docstring_parser~=0.16; \
+            playwright install --with-deps chromium \
+            ;; \
+        armv7*|armv6*|armhf) \
+            echo "Installing minimal deps for 32-bit ARM ($arch)…"; \
+            apt-get update; \
+            apt-get install -y --no-install-recommends gcc python3-dev libpq-dev; \
+            rm -rf /var/lib/apt/lists/*; \
+            sed -i 's/psycopg\[binary\]/psycopg\[c\]/' requirements.txt; \
+            pip install --no-cache-dir -r requirements.txt \
+            ;; \
+        *) \
+            echo "Unknown arch ($arch), install only pure-Python deps…"; \
+            pip install --no-cache-dir -r requirements.txt \
+            ;; \
+    esac
 
 CMD ["python", "/app/main.py"]
