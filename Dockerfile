@@ -13,7 +13,7 @@ RUN arch=$(uname -m) && \
         pip install --no-cache-dir -r requirements.txt && \
         pip install --no-cache-dir pytest-playwright~=0.6.2 docstring_parser~=0.16 && \
         playwright install --with-deps chromium; \
-    elif [ "$arch" = "armv7" ]; then \
+    elif [ "$arch" = "arm" ]; then \
         apt update && \
         apt install -y gcc python3-dev libpq-dev && \
         apt-get clean && rm -rf /var/lib/apt/lists/* && \
