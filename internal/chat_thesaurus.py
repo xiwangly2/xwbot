@@ -10,10 +10,10 @@ import requests
 from internal.api.MessageBuilder import MessageBuilder
 from internal.api.OneBot11 import send_msg, get_forward_msg, send_like, delete_msg, set_group_special_title, \
     get_group_member_info
-from internal.api.gocqhttp import check_url_safely
+from internal.api.gocqhttp import check_url_safely, get_group_file_url
 from internal.config import config
 from internal.database.db_handler import get_bot_switch, set_bot_switch, set_chat_logs
-from internal.format_output import clear_terminal, print_error
+from internal.format_output import clear_terminal, print_error, print_purple
 
 
 def parse_message(messages):
@@ -95,6 +95,44 @@ async def handle_math_command(arg, arg_len):
         return f"{response.text}"
 
 
+async def handle_file_message(ws, messages, message):
+    try:
+        # 从消息中提取 file_id
+        match = re.search(r'file_id=([^,]+)', message)
+        if not match:
+            return "未找到文件ID"
+        file_id = match.group(1)
+
+        if messages['message_type'] == 'group':
+            # 调用 get_group_file_url 函数获取文件信息
+            file_info = await get_group_file_url(ws, messages['group_id'], file_id)
+        elif messages['message_type'] == 'private':
+            # 调用 get_private_file_url 函数获取文件消息
+            file_info = await get_group_file_url(ws, messages['user_id'], file_id)
+        else:
+            return None
+        print_purple(file_info)
+
+        # 检查初始返回值
+        if not file_info or 'data' not in file_info:
+            # 等待后续消息获取真正的 URL
+            while True:
+                response = await ws.receive()
+                next_message = json.loads(response.data)
+
+                # 检查是否是包含 URL 的消息
+                if 'data' in next_message and 'url' in next_message['data']:
+                    file_url = next_message['data']['url']
+                    return [f"文件ID: {file_info["file"]["id"]}\n文件名称: {file_info["file"]["name"]}\n文件大小: {file_info["file"]["size"]}",
+                            f"文件链接: {file_url}"]
+        return None
+    except Exception as e:
+        if config['debug']:
+            import traceback
+            traceback.print_exc()
+        return f"处理文件消息时出错: {str(e)}"
+
+
 # noinspection PyPackageRequirements,PyProtectedMember
 async def screenshot_command(arg, arg_len):
     import platform
@@ -126,6 +164,7 @@ async def screenshot_command(arg, arg_len):
                 return f"无法访问链接: {arg[1]} 错误: {str(e)}"
             finally:
                 await browser.close()
+                return None
     else:
         return f"当前功能不支持系统架构: {arch}"
 
@@ -162,6 +201,9 @@ async def chat_thesaurus(messages, ws=None, chat_ai_process=None):
         elif arg[0] == '/AI' and is_admin:
             set_bot_switch(messages['group_id'], 'AI')
             return "Bot transitioned to AI state."
+        elif arg[0] == '/QA' and is_admin:
+            set_bot_switch(messages['group_id'], 'QA')
+            return "Bot transitioned to QA state."
         elif arg[0] == '/help':
             return "这是一个帮助列表<Response [200]>"
         elif arg[0] == '/来份萝莉' or arg[0] == '/loli':
@@ -327,6 +369,8 @@ async def chat_thesaurus(messages, ws=None, chat_ai_process=None):
                 'auto_escape': True,
                 'text_list': ['解析合并转发:', text]
             }
+        elif re.search(r'^\[CQ:file(.+)]', message):
+            return await handle_file_message(ws, messages, message)
         elif re.search(r'(.+)?/(.+)?pic(.+)?', message):
             from internal.pic import pic
             # 表情包功能
@@ -383,6 +427,20 @@ async def chat_thesaurus(messages, ws=None, chat_ai_process=None):
                     return None
                 else:
                     return result.rstrip('\n')
+            return None
+    elif bot_switch.switch == 'QA':
+        from internal.ai.qa import generate_response
+        if arg[0] == '/on' and is_admin:
+            set_bot_switch(messages['group_id'], '1')
+            return "Bot transitioned to Running state."
+        elif arg[0] == '/off' and is_admin:
+            set_bot_switch(messages['group_id'], '0')
+            return "Bot is off."
+        else:
+            text = await generate_response(f"{messages}")
+            if text == 'no reply' or text is None:
+                return None
+            return text
     else:
         return None
 
