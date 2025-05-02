@@ -16,13 +16,8 @@ RUN arch=$(uname -m) && \
         pip install --no-cache-dir pytest-playwright~=0.6.2 docstring_parser~=0.16 aisuite[all]~=0.1.10 && \
         playwright install --with-deps chromium; \
     else \
-        if [ "$arch" = "s390x" ]; then \
-            # 仅在 s390x 上排除 psycopg
-            grep -v "psycopg[binary]" requirements.txt | pip install --no-cache-dir -r /dev/stdin; \
-        else \
-            # 其他架构安装部分依赖 \
-            pip install --no-cache-dir -r requirements.txt; \
-        fi; \
+        # 其他架构安装部分依赖 \
+        pip install --no-cache-dir -r requirements.txt; \
     fi
 
 CMD ["python", "/app/main.py"]
