@@ -24,9 +24,7 @@ def _handle_mysql(sql_config):
 
 def _handle_postgres(sql_config):
     """处理PostgreSQL数据库配置"""
-    driver = 'psycopg2srv' if sql_config['srv'] else 'psycopg2'
-    host_port = f"{sql_config['host']}" if sql_config['srv'] else f"{sql_config['host']}:{sql_config['port']}"
-    return f"postgresql+{driver}://{sql_config['username']}:{sql_config['password']}@{host_port}/{sql_config['database']}", sql_config['connect_args']
+    return f"postgresql+psycopg://{sql_config['username']}:{sql_config['password']}@{sql_config['host']}:{sql_config['port']}/{sql_config['database']}", sql_config['connect_args']
 
 
 # 数据库类型与处理函数的映射

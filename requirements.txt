@@ -1,9 +1,9 @@
 aiohttp~=3.10.11
 colorama~=0.4.6
-psycopg2-binary~=2.9.10
-PyMySQL~=1.0.2
+psycopg[binary]~=3.2.7
+PyMySQL~=1.1.1
 PyYAML~=6.0.2
 Requests~=2.32.3
 SQLAlchemy~=2.0.37
 DBUtils~=3.0.3
-aisuite~=0.1.10
+aisuite[openai]~=0.1.10

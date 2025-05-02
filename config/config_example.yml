@@ -37,7 +37,6 @@ sql: # 数据库配置，多选一
     database: "xwbot" # 数据库名
     username: "xwbot" # 数据库用户名
     password: "123456" # 数据库密码
-    srv: false # 是否使用 srv 记录连接数据库
     connect_args: {}
 
 aisuite:
