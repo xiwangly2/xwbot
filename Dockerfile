@@ -9,7 +9,7 @@ COPY . /app
 # 根据架构选择性安装
 RUN arch=$(uname -m) && \
     apt update && \
-    apt install -y && \
+    apt install -y gcc python3-dev libpq-dev && \
     if [ "$arch" = "x86_64" ] || [ "$arch" = "aarch64" ]; then \
         # 主流架构安装完整依赖
         pip install --no-cache-dir -r requirements.txt && \
@@ -18,7 +18,7 @@ RUN arch=$(uname -m) && \
     else \
         if [ "$arch" = "s390x" ]; then \
             # 仅在 s390x 上排除 psycopg
-            grep -v "psycopg" requirements.txt | pip install --no-cache-dir -r /dev/stdin; \
+            grep -v "psycopg[binary]" requirements.txt | pip install --no-cache-dir -r /dev/stdin; \
         else \
             # 其他架构安装部分依赖 \
             pip install --no-cache-dir -r requirements.txt; \
