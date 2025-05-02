@@ -13,19 +13,16 @@ RUN arch=$(uname -m) && \
         pip install --no-cache-dir -r requirements.txt && \
         pip install --no-cache-dir pytest-playwright~=0.6.2 docstring_parser~=0.16 && \
         playwright install --with-deps chromium; \
+    elif [ "$arch" = "armv7" ]; then \
+        apt update && \
+        apt install -y gcc python3-dev libpq-dev && \
+        apt-get clean && rm -rf /var/lib/apt/lists/* && \
+        # 替换 psycopg[binary] 为 psycopg[c]
+        sed -i 's/psycopg\[binary\]/psycopg\[c\]/' requirements.txt && \
+        pip install --no-cache-dir -r requirements.txt; \
     else \
-        if [ "$arch" ~= "armv7" ]; then \
-            apt update && \
-            apt install -y gcc python3-dev libpq-dev && \
-            # armv7 架构安装部分依赖 \
-            # 替换psycopg[binary]为psycopg[c] \
-            sed -i 's/psycopg\[binary\]/psycopg\[c\]/' requirements.txt && \
-            # armv7 架构安装 psycopg[c] 依赖 \
-            pip install --no-cache-dir -r requirements.txt; \
-        else \
-            # 其他架构安装部分依赖 \
-            pip install --no-cache-dir -r requirements.txt; \
-        fi \
+        # 其他架构安装部分依赖
+        pip install --no-cache-dir -r requirements.txt; \
     fi
 
 CMD ["python", "/app/main.py"]
