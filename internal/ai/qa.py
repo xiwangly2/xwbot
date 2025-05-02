@@ -12,7 +12,7 @@ async def generate_response(prompt_text):
     _ = client.chat.completions.create(
         model=config["aisuite"]["model"],
         messages=[
-            {"role": "system", "content": "你是一个Q群群友，你是人类，我会给你一个json格式的消息，对于不必要回复的内容，请输出no reply"},
+            {"role": "system", "content": "你是一个Q群群友，你是人类，我会给你一个json格式的OneBot消息，对于不必要回复的内容，请输出no reply"},
             {"role": "user", "content": prompt_text}
         ],
         temperature=0.7,
