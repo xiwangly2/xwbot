@@ -8,6 +8,7 @@ COPY . /app
 
 # 根据架构选择性安装
 RUN arch=$(uname -m) && \
+    echo "Debug: Current architecture is $arch" && \
     if [ "$arch" = "x86_64" ] || [ "$arch" = "aarch64" ]; then \
         # 主流架构安装完整依赖
         pip install --no-cache-dir -r requirements.txt && \
