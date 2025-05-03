@@ -9,7 +9,7 @@ from internal.format_output import print_error
 
 def _handle_dsn(sql_config):
     """处理DSN数据库配置"""
-    return sql_config, {}
+    return sql_config['value'], sql_config['connect_args']
 
 
 def _handle_sqlite3(sql_config):
