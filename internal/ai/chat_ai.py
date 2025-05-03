@@ -1,7 +1,6 @@
 import time
 from multiprocessing import Process, Queue
 
-# noinspection PyPackageRequirements
 import aisuite as ai
 
 from internal.format_output import print_info
