@@ -47,9 +47,11 @@ try:
 
     engine = create_engine(dsn, pool_pre_ping=True, connect_args=connect_args)
 
-    # 统一创建所有表
+    # 按需创建所有表
+    conn = engine.connect()
     for model in [Pic, Logs, Switch]:
-        model.metadata.create_all(engine)
+        if not engine.dialect.has_table(conn, model.__tablename__):
+            model.metadata.create_all(engine)
 
 except Exception as e:
     print_error(f"数据库连接失败: {str(e)}")
