@@ -437,6 +437,8 @@ async def chat_thesaurus(messages, ws=None, chat_ai_process=None):
             set_bot_switch(messages['group_id'], '0')
             return "Bot is off."
         else:
+            if messages['self_id'] == messages['user_id']:
+                return None
             text = await generate_response(f"{messages}")
             if text == 'no reply' or text is None:
                 return None
